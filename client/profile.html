@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="User profile for Image Search App">
+    <title>Profile - Image Search App</title>
+    <link rel="icon" href="favicon.ico">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h1>Image Search App</h1>
+        <nav class="navbar">
+            <div class="nav-links">
+                <a href="landing.html" class="nav-link">Welcome</a>
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="search.html" class="nav-link">Search</a>
+                <a href="about.html" class="nav-link">About</a>
+                <a href="contact.html" class="nav-link">Contact</a>
+                <a href="profile.html" class="nav-link active" id="profile-link" style="display: none;">Profile</a>
+                <a href="login.html" class="nav-link" id="login-link">Login</a>
+                <a href="register.html" class="nav-link" id="register-link">Register</a>
+                <a href="#" class="nav-link" id="logout-link" style="display: none;">Logout</a>
+            </div>
+            <button class="hamburger">☰</button>
+        </nav>
+    </header>
+
+    <button id="theme-toggle">Toggle Dark Mode</button>
+
+    <main class="profile">
+        <h2>User Profile</h2>
+        <div class="profile-card">
+            <h3 id="username">Loading...</h3>
+            <p id="email">Loading...</p>
+        </div>
+        <div class="profile-links">
+            <a href="search.html#favorites">View Favorites</a>
+            <a href="search.html#download-history">View Download History</a>
+        </div>
+        <p id="error-message" class="error"></p>
+    </main>
+
+    <footer>
+        <p>Powered by <a href="https://unsplash.com" target="_blank">Unsplash</p>
+        <p>© 2025 Image Search App</p>
+    </footer>
+
+    <script src="js/utils.js" type="module"></script>
+    <script type="module">
+        import { initTheme, initNavigation } from './js/utils.js';
+        initTheme();
+        initNavigation();
+
+        const token = localStorage.getItem('token');
+        const errorMessage = document.getElementById('error-message');
+
+        if (!token) {
+            window.location.href = 'register.html';
+        }
+
+        const GRAPHQL_URL = 'http://localhost:6000/graphql'; // Update for production
+
+        // Fetch user profile (mocked for now, replace with GraphQL query)
+        async function loadUserProfile() {
+            try {
+                // Mocked data (replace with actual query when backend is ready)
+                let user = { username: 'User', email: 'user@example.com' };
+
+                // Uncomment when backend is ready
+                /*
+                const query = `
+                    query {
+                        getUserProfile {
+                            username
+                            email
+                        }
+                    }`;
+                const res = await fetch(GRAPHQL_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ query }),
+                });
+                const { data, errors } = await res.json();
+                if (errors) throw new Error(errors[0].message);
+                user = data.getUserProfile;
+                */
+            
+                document.getElementById('username').textContent = user.username;
+                document.getElementById('email').textContent = user.email;
+            } catch (error) {
+                errorMessage.textContent = 'Failed to load profile. Using default data.';
+                document.getElementById('username').textContent = 'Guest User';
+                document.getElementById('email').textContent = 'guest@example.com';
+            }
+        }
+
+        loadUserProfile();
+
+        // Logout
+        document.getElementById('logout-link').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('downloadHistory');
+            window.location.href = 'landing.html';
+        });
+    </script>
+</body>
+</html>

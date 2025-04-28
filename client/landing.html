@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Welcome to the Image Search App">
+    <title>Welcome - Visualviews</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h1>Visualviews</h1>
+        <nav class="navbar">
+            <div class="nav-links">
+                <a href="landing.html" class="nav-link active">Welcome</a>
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="search.html" class="nav-link">Search</a>
+                <a href="about.html" class="nav-link">About</a>
+                <a href="contact.html" class="nav-link">Contact</a>
+                <a href="profile.html" class="nav-link" id="profile-link" style="display: none;">Profile</a>
+                <a href="login.html" class="nav-link" id="login-link">Login</a>
+                <a href="register.html" class="nav-link" id="register-link">Register</a>
+                <a href="#" class="nav-link" id="logout-link" style="display: none;">Logout</a>
+            </div>
+            <button class="hamburger">☰</button>
+        </nav>
+    </header>
+
+    <button id="theme-toggle">Toggle Dark Mode</button>
+
+    <main class="landing">
+        <div class="hero">
+            <h2>Discover Stunning Images</h2>
+            <p>Search, download, and save your favorite photos from Unsplash.</p>
+            <a href="search.html" class="cta-button">Start Searching</a>
+        </div>
+        <div class="animated-gallery">
+            <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e" alt="Beach" class="gallery-image">
+            <img src="images/tech.jpg" alt="Tech" class="gallery-image">
+            <img src="images/people j.jpg" alt="People" class="gallery-image">
+        </div>
+    </main>
+
+    <footer>
+        <p>Powered by <a href="https://unsplash.com" target="_blank">Visualviews</a></p>
+        <p>© 2025 Visualviews</p>
+    </footer>
+
+    <script src="js/utils.js" type="module"></script>
+    <script>
+        import { initTheme, initNavigation } from './js/utils.js';
+        initTheme();
+        initNavigation();
+
+        // const token = localStorage.getItem('token');
+        // const loginLink = document.getElementById('login-link');
+        // const registerLink = document.getElementById('register-link');
+        // const logoutLink = document.getElementById('logout-link');
+        // const ctaButton = document.querySelector('.cta-button');
+
+        // if (token) {
+        //     loginLink.style.display = 'none';
+        //     registerLink.style.display = 'none';
+        //     logoutLink.style.display = 'inline';
+        //     ctaButton.href = 'search.html';
+        //     ctaButton.textContent = 'Go to Search';
+        // }
+
+        // logoutLink.addEventListener('click', () => {
+        //     localStorage.removeItem('token');
+        //     location.reload();
+        // });
+
+        // // Hamburger menu
+        // const hamburger = document.querySelector('.hamburger');
+        // const navLinks = document.querySelector('.nav-links');
+        // hamburger.addEventListener('click', () => {
+        //     navLinks.classList.toggle('open');
+        // });
+
+        const ctaButton = document.querySelector('.cta-button');
+        if (localStorage.getItem('token')) {
+            ctaButton.href = 'search.html';
+            ctaButton.textContent = 'Go to Search';
+        }
+
+        document.getElementById('logout-link').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('downloadHistory');
+            location.reload();
+        });
+    </script>
+</body>
+</html>

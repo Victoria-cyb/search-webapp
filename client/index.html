@@ -1,0 +1,187 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Search and download images from Unsplash">
+    <title>Image Search App</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <h1>Image Search App</h1>
+    <form action="">
+        <input type="text" id="search-input" placeholder="Search for Images">
+        <button id="search-button">Search</button>
+    </form>
+
+    <div class="search-results">
+       <div class="search-result">
+          <img src="images/clapping people.jpg" alt="People at events">
+          <a href="images/clapping people.jpg" target="_blank">People at events</a>
+       </div>
+
+       <div class="search-result">
+        <img src="images/clapping people.jpg" alt="People at events">
+        <a href="images/clapping people.jpg" target="_blank">People at events</a>
+     </div>
+
+     <div class="search-result">
+        <img src="images/clapping people.jpg" alt="People at events">
+        <a href="images/clapping people.jpg" target="_blank">People at events</a>
+     </div>
+    </div>
+
+    <button id="show-more-button">Show more</button>
+   
+    
+
+    <script src="script.js"></script>
+
+
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Search and download images from Unsplash">
+    <title>Visualviews</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h1>Visualviews</h1>
+        <nav class="navbar">
+            <button class="hamburger">☰</button>
+            <div class="nav-links">
+                <a href="landing.html" class="nav-link">Welcome</a>
+                <a href="index.html" class="nav-link active">Home</a>
+                <a href="search.html" class="nav-link">Search</a>
+                <a href="about.html" class="nav-link">About</a>
+                <a href="contact.html" class="nav-link">Contact</a>
+                <a href="profile.html" class="nav-link" id="profile-link" style="display: none;">Profile</a>
+                <a href="login.html" class="nav-link" id="login-link">Login</a>
+                <a href="register.html" class="nav-link" id="register-link">Register</a>
+                <a href="#" class="nav-link" id="logout-link" style="display: none;">Logout</a>
+            </div>
+         
+        </nav>
+    </header>
+
+    <button id="theme-toggle">Toggle Dark Mode</button>
+
+    <!-- <div class="categories">
+        <button data-category="nature">Nature</button>
+        <button data-category="technology">Technology</button>
+        <button data-category="people">People</button>
+    </div>
+
+    <form>
+        <input type="text" id="search-input" placeholder="Search for Images">
+        <button type="submit" id="search-button">Search</button>
+    </form>
+
+    <div class="search-history"></div>
+    <div class="search-results">
+        <div class="search-result">
+            <img src="images/clapping people.jpg" alt="People at events">
+            <a href="images/clapping people.jpg" target="_blank">People at events</a>
+         </div>
+  
+         <div class="search-result">
+          <img src="images/peopless.jpg" alt="People at events">
+          <a href="images/peopless.jpg" target="_blank">People at events</a>
+       </div>
+  
+       <div class="search-result">
+          <img src="images/people.jpg" alt="People at events">
+          <a href="images/people.jpg" target="_blank">People at events</a>
+       </div>
+
+       <div class="search-result">
+        <img src="images/stand people.jpg" alt="People at events">
+        <a href="images/stand people.jpg" target="_blank">People at events</a>
+     </div>
+
+     <div class="search-result">
+        <img src="images/tablle people.jpg" alt="People at events">
+        <a href="images/tablle people.jpg" target="_blank">People at events</a>
+     </div>
+
+     <div class="search-result">
+        <img src="images/people.jpg" alt="People at events">
+        <a href="images/people.jpg" target="_blank">People at events</a>
+     </div>
+    </div>
+    <div id="show-more-button"></div>
+    <div class="favorites"></div> -->
+
+    <main class="home">
+        <h2>Welcome to Your Image Search Journey</h2>
+        <p>Explore a world of stunning images with our powerful search tool. Save your favorites, download high-quality photos, and share your discoveries.</p>
+        <a href="search.html" class="cta-button">Try the Search Now</a>
+        <div class="features">
+            <div class="feature">
+                <h3>Search & Discover</h3>
+                <p>Find images by keywords or categories like nature, technology, and people.</p>
+            </div>
+            <div class="feature">
+                <h3>Save Favorites</h3>
+                <p>Log in to save your favorite images and access them anytime.</p>
+            </div>
+            <div class="feature">
+                <h3>Download & Share</h3>
+                <p>Download full-resolution images and share search links with friends.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>Powered by <a href="https://unsplash.com" target="_blank">Unsplash</a></p>
+        <p>© 2025 Visualviews</p>
+    </footer>
+
+    <!-- <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="js/utils.js" type="module"></script>
+    <script src="js/script.js" type="module"></script> -->
+
+    <script src="js/utils.js" type="module"></script>
+    <script>
+        import { initTheme, initNavigation } from './js/utils.js';
+        initTheme();
+        initNavigation();
+
+        // const token = localStorage.getItem('token');
+        // const loginLink = document.getElementById('login-link');
+        // const registerLink = document.getElementById('register-link');
+        // const logoutLink = document.getElementById('logout-link');
+
+        // if (token) {
+        //     loginLink.style.display = 'none';
+        //     registerLink.style.display = 'none';
+        //     logoutLink.style.display = 'inline';
+        // }
+
+        // logoutLink.addEventListener('click', () => {
+        //     localStorage.removeItem('token');
+        //     window.location.href = 'landing.html';
+        // });
+
+        // // Hamburger menu
+        // const hamburger = document.querySelector('.hamburger');
+        // const navLinks = document.querySelector('.nav-links');
+        // hamburger.addEventListener('click', () => {
+        //     navLinks.classList.toggle('open');
+        // });
+
+        document.getElementById('logout-link').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('downloadHistory');
+            window.location.href = 'landing.html';
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Search and download images from Unsplash">
+    <title>Search - Image Search App</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h1>Visualviews</h1>
+        <nav class="navbar">
+            <div class="nav-links">
+                <a href="landing.html" class="nav-link">Welcome</a>
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="search.html" class="nav-link active">Search</a>
+                <a href="about.html" class="nav-link">About</a>
+                <a href="contact.html" class="nav-link">Contact</a>
+                <a href="profile.html" class="nav-link" id="profile-link" style="display: none;">Profile</a>
+                <a href="login.html" class="nav-link" id="login-link">Login</a>
+                <a href="register.html" class="nav-link" id="register-link">Register</a>
+                <a href="#" class="nav-link" id="logout-link" style="display: none;">Logout</a>
+            </div>
+            <button class="hamburger">☰</button>
+        </nav>
+    </header>
+
+    <button id="theme-toggle">Toggle Dark Mode</button>
+
+    <div class="categories">
+        <button data-category="nature">Nature</button>
+        <button data-category="technology">Technology</button>
+        <button data-category="people">People</button>
+    </div>
+
+    <form>
+        <input type="text" id="search-input" placeholder="Search for Images">
+        <button type="submit" id="search-button">Search</button>
+        <button type="button" id="clear-search">Clear</button>
+    </form>
+
+    <div class="filters">
+        <h3>Advanced Filters (Registered Users Only)</h3>
+        <div class="filter-group">
+            <select id="orientation">
+                <option value="">All Orientations</option>
+                <option value="landscape">Landscape</option>
+                <option value="portrait">Portrait</option>
+                <option value="square">Square</option>
+            </select>
+            <select id="color">
+                <option value="">All Colors</option>
+                <option value="red">Red</option>
+                <option value="blue">Blue</option>
+                <option value="green">Green</option>
+                <option value="black_and_white">Black & White</option>
+            </select>
+            <select id="size">
+                <option value="">All Sizes</option>
+                <option value="small">Small</option>
+                <option value="medium">Medium</option>
+                <option value="large">Large</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="search-history"></div>
+    <div class="search-results"></div>
+    <div id="show-more-button"></div>
+    <div class="favorites"></div>
+    <div class="download-history"></div>
+
+    <footer>
+        <p>Powered by <a href="https://unsplash.com" target="_blank">Visualviews</p>
+        <p>© 2025Visualviews</p>
+    </footer>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="js/utils.js" type="module"></script>
+    <script src="js/script.js" type="module"></script>
+</body>
+</html>

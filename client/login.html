@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Log in to the Image Search App">
+    <title>Login - Visualviews</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h1>Visualviews</h1>
+        <nav class="navbar">
+            <div class="nav-links">
+                <a href="landing.html" class="nav-link">Welcome</a>
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="search.html" class="nav-link">Search</a>
+                <a href="about.html" class="nav-link">About</a>
+                <a href="contact.html" class="nav-link">Contact</a>
+                <a href="profile.html" class="nav-link" id="profile-link" style="display: none;">Profile</a>
+                <a href="login.html" class="nav-link active" id="login-link">Login</a>
+                <a href="register.html" class="nav-link" id="register-link">Register</a>
+                <a href="#" class="nav-link" id="logout-link" style="display: none;">Logout</a>
+            </div>
+            <button class="hamburger">☰</button>
+        </nav>
+    </header>
+
+    <button id="theme-toggle">Toggle Dark Mode</button>
+
+    <main class="login">
+        <h2>Log In</h2>
+        <form id="login-form">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="Enter your email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter your password" required>
+            </div>
+            <button type="submit">Log In</button>
+        </form>
+        <p>Or log in with Google:</p>
+        <div id="g_id_signin" data-client_id="115641619754-3dmhnr5eb01hk4l9qkj4r0nfh8bo4f97.apps.googleusercontent.com" data-callback="handleGoogleLogin"></div>
+        <p>Don't have an account? <a href="login.html#register">Register</a></p>
+        <p id="error-message" class="error"></p>
+    </main>
+
+    <footer>
+        <p>Powered by <a href="https://unsplash.com" target="_blank">Visualviews</p>
+        <p>© 2025 Visualviews App</p>
+    </footer>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="js/utils.js" type="module"></script>
+    <script type="module">
+        import { initTheme, initNavigation } from './js/utils.js';
+        initTheme();
+        initNavigation();
+
+        const GRAPHQL_URL = 'http://localhost:6000/graphql'; // Update for production
+        const form = document.getElementById('login-form');
+        const errorMessage = document.getElementById('error-message');
+        const submitButton = form.querySelector('button[type="submit"]');
+
+        // Client-side validation
+        function validateForm(email, password) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                errorMessage.textContent = 'Please enter a valid email address.';
+                return false;
+            }
+            if (password.length < 6) {
+                errorMessage.textContent = 'Password must be at least 6 characters.';
+                return false;
+            }
+            return true;
+        }
+
+        // Handle email/password login
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!validateForm(email, password)) return;
+
+            submitButton.disabled = true;
+            submitButton.textContent = 'Logging In...';
+            errorMessage.textContent = '';
+
+            const query = `
+                mutation {
+                    login(email: "${email}", password: "${password}") {
+                        token
+                        user { id email favorites { id urls { small regular full } alt_description links { html } user { name } } }
+                    }
+                }`;
+            try {
+                const res = await fetch(GRAPHQL_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query }),
+                });
+                const { data, errors } = await res.json();
+                if (errors) throw new Error(errors[0].message);
+                if (data.login) {
+                    localStorage.setItem('token', data.login.token);
+                    window.location.href = 'search.html';
+                }
+            } catch (error) {
+                errorMessage.textContent = error.message || 'Failed to log in. Please try again.';
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Log In';
+            }
+        });
+
+        // Handle Google login
+        window.handleGoogleLogin = async (response) => {
+            const googleToken = response.credential;
+            const query = `
+                mutation {
+                    googleLogin(googleToken: "${googleToken}") {
+                        token
+                        user { id email favorites { id urls { small regular full } alt_description links { html } user { name } } }
+                    }
+                }`;
+            try {
+                const res = await fetch(GRAPHQL_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query }),
+                });
+                const { data, errors } = await res.json();
+                if (errors) throw new Error(errors[0].message);
+                if (data.googleLogin) {
+                    localStorage.setItem('token', data.googleLogin.token);
+                    window.location.href = 'search.html';
+                }
+            } catch (error) {
+                errorMessage.textContent = error.message || 'Failed to log in with Google. Please try again.';
+            }
+        };
+
+        document.getElementById('logout-link').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('downloadHistory');
+            window.location.href = 'landing.html';
+        });
+
+       
+       
+    </script>
+</body>
+</html>

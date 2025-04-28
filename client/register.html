@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Register for the Image Search App">
+    <title>Register - Image Search App</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h1>Image Search App</h1>
+        <nav class="navbar">
+            <div class="nav-links">
+                <a href="landing.html" class="nav-link">Welcome</a>
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="search.html" class="nav-link">Search</a>
+                <a href="about.html" class="nav-link">About</a>
+                <a href="contact.html" class="nav-link">Contact</a>
+                <a href="profile.html" class="nav-link" id="profile-link" style="display: none;">Profile</a>
+                <a href="login.html" class="nav-link" id="login-link">Login</a>
+                <a href="register.html" class="nav-link active" id="register-link">Register</a>
+                <a href="#" class="nav-link" id="logout-link" style="display: none;">Logout</a>
+            </div>
+            <button class="hamburger">☰</button>
+        </nav>
+    </header>
+
+    <button id="theme-toggle">Toggle Dark Mode</button>
+
+    <main class="register">
+        <h2>Register</h2>
+        <form id="register-form">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Enter your username" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="Enter your email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter your password" required>
+            </div>
+            <button type="submit">Register</button>
+        </form>
+        <p>Or register with Google:</p>
+        <div id="g_id_signin" data-client_id="115641619754-3dmhnr5eb01hk4l9qkj4r0nfh8bo4f97.apps.googleusercontent.com" data-callback="handleGoogleRegister"></div>
+        <p>Already have an account? <a href="login.html">Log in</a></p>
+        <p id="error-message" class="error"></p>
+    </main>
+
+    <footer>
+        <p>Powered by <a href="https://unsplash.com" target="_blank">Unsplash</p>
+        <p>© 2025 Image Search App</p>
+    </footer>
+
+    <script src="js/utils.js" type="module"></script>
+    <script type="module">
+        import { initTheme, initNavigation } from './js/utils.js';
+        initTheme();
+        initNavigation();
+
+        const GRAPHQL_URL = 'http://localhost:6000/graphql'; // Update for production
+        const form = document.getElementById('register-form');
+        const errorMessage = document.getElementById('error-message');
+        const submitButton = form.querySelector('button[type="submit"]');
+
+        // Client-side validation
+        function validateForm(username, email, password) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (username.length < 3) {
+                errorMessage.textContent = 'Username must be at least 3 characters.';
+                return false;
+            }
+            if (!emailRegex.test(email)) {
+                errorMessage.textContent = 'Please enter a valid email address.';
+                return false;
+            }
+            if (password.length < 6) {
+                errorMessage.textContent = 'Password must be at least 6 characters.';
+                return false;
+            }
+            return true;
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!validateForm(username, email, password)) return;
+
+            submitButton.disabled = true;
+            submitButton.textContent = 'Registering...';
+            errorMessage.textContent = '';
+
+            const query = `
+                mutation {
+                    register(username: "${username}", email: "${email}", password: "${password}") {
+                        token
+                        user { id email username }
+                    }
+                }`;
+            try {
+                const res = await fetch(GRAPHQL_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query }),
+                });
+                const { data, errors } = await res.json();
+                if (errors) throw new Error(errors[0].message);
+                if (data.register) {
+                    localStorage.setItem('token', data.register.token);
+                    window.location.href = 'search.html';
+                }
+            } catch (error) {
+                errorMessage.textContent = error.message || 'Failed to register. Please try again.';
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Register';
+            }
+        });
+
+        document.getElementById('logout-link').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('downloadHistory');
+            window.location.href = 'landing.html';
+        });
+    </script>
+</body>
+</html>
