@@ -12,11 +12,11 @@
         <h1>Visualviews</h1>
         <nav class="navbar">
             <div class="nav-links">
-                <a href="landing.html" class="nav-link">Welcome</a>
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="search.html" class="nav-link">Search</a>
-                <a href="about.html" class="nav-link">About</a>
-                <a href="contact.html" class="nav-link">Contact</a>
+                <a href="landing.html" class="nav-link" id="landing-link">Welcome</a>
+                <a href="index.html" class="nav-link" id="index-link">Home</a>
+                <a href="search.html" class="nav-link" id="search-link">Search</a>
+                <a href="about.html" class="nav-link" id="about-link">About</a>
+                <a href="contact.html" class="nav-link" id="contact-link">Contact</a>
                 <a href="profile.html" class="nav-link" id="profile-link" style="display: none;">Profile</a>
                 <a href="login.html" class="nav-link active" id="login-link">Login</a>
                 <a href="register.html" class="nav-link" id="register-link">Register</a>
@@ -54,12 +54,15 @@
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="js/utils.js" type="module"></script>
+    <script type="module" src="js/script.js"></script>
     <script type="module">
-        import { initTheme, initNavigation } from './js/utils.js';
-        initTheme();
-        initNavigation();
+        //   import { initNavigation } from './js/utils.js';
+        //   initNavigation();
 
-        const GRAPHQL_URL = 'http://localhost:6000/graphql'; // Update for production
+        const GRAPHQL_URL = window.location.hostname === 'localhost'
+        ? 'http://localhost:6000/graphql'
+        : 'https://search-webapp.onrender.com/graphql';
+        
         const form = document.getElementById('login-form');
         const errorMessage = document.getElementById('error-message');
         const submitButton = form.querySelector('button[type="submit"]');

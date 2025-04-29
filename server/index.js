@@ -1,5 +1,6 @@
 const express = require('express');
 const { ApolloServer } = require('apollo-server-express');
+const cors = require('cors');
 const typeDefs = require('./schemas/typeDefs');
 const authResolvers = require('./resolvers/auth');
 const imageResolvers = require('./resolvers/image');
@@ -11,6 +12,8 @@ const Download = require('./models/Download');
 require('dotenv').config();
 
 const app = express();
+
+app.use(cors())
 
 const resolvers = {
   Query: {
