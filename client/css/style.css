@@ -131,40 +131,179 @@ main.home {
 
 
 
-main.profile {
-  max-width: 600px;
+/* Profile Page Specific Styles */
+.profile {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
   text-align: center;
 }
 
 .profile-card {
-  background: #f9f9f9;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
   padding: 20px;
-  border-radius: 5px;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.profile-card h3 {
-  margin-bottom: 10px;
+#profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.form-group label {
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.form-group input {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+#profile-form button {
+  background-color: #f8286e;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+#profile-form button:hover {
+  background-color: #d1175a;
+}
+
+#error-message {
+  color: #d1175a;
+  margin: 10px 0;
+  min-height: 20px;
 }
 
 .profile-links {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  margin: 20px 0;
 }
 
 .profile-links a {
-  padding: 10px;
-  background-color: #d11872;
-  color: #fff;
+  color: #f8286e;
   text-decoration: none;
-  border-radius: 5px;
+  margin: 0 10px;
 }
 
 .profile-links a:hover {
-  background-color: #d11872;
+  text-decoration: underline;
 }
+
+.favorites, .download-history {
+  margin: 20px 0;
+}
+
+.favorites h3, .download-history h3 {
+  margin-bottom: 10px;
+  font-size: 1.5em;
+}
+
+/* Ensure search-result consistency */
+.search-result {
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin: 10px 0;
+  text-align: center;
+  background-color: #fff;
+}
+
+.search-result img {
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 10px;
+}
+
+.search-result a {
+  color: #f8286e;
+  text-decoration: none;
+}
+
+.search-result a:hover {
+  text-decoration: underline;
+}
+
+.search-result button {
+  background-color: #f8286e;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  margin: 5px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.search-result button:hover {
+  background-color: #d1175a;
+}
+
+/* Dark Mode Adjustments */
+body.dark-mode .profile {
+  background-color: #1a1a1a;
+}
+
+body.dark-mode .profile-card {
+  background-color: #2c2c2c;
+  border-color: #555;
+}
+
+body.dark-mode #profile-form input {
+  background-color: #2c2c2c;
+  border-color: #555;
+  color: #fff;
+}
+
+body.dark-mode #profile-form button {
+  background-color: #444;
+}
+
+body.dark-mode #profile-form button:hover {
+  background-color: #666;
+}
+
+body.dark-mode #error-message {
+  color: #ff6666;
+}
+
+body.dark-mode .profile-links a {
+  color: #ff6666;
+}
+
+body.dark-mode .search-result {
+  background-color: #2c2c2c;
+  border-color: #555;
+}
+
+body.dark-mode .search-result a {
+  color: #ff6666;
+}
+
+body.dark-mode .search-result button {
+  background-color: #444;
+}
+
+body.dark-mode .search-result button:hover {
+  background-color: #666;
+}
+
 
 .features {
   display: grid;
@@ -784,5 +923,32 @@ footer a {
 
   #search-button, #clear-search {
       margin: 10px 0;
+  }
+}
+/* Responsive Design */
+@media (max-width: 600px) {
+  .profile {
+      padding: 10px;
+  }
+
+  .profile-card {
+      padding: 15px;
+  }
+
+  #profile-form {
+      max-width: 100%;
+  }
+
+  .form-group input {
+      font-size: 14px;
+  }
+
+  .profile-links a {
+      display: block;
+      margin: 10px 0;
+  }
+
+  .search-result {
+      margin: 5px 0;
   }
 }

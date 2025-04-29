@@ -30,83 +30,40 @@
     <button id="theme-toggle">Toggle Dark Mode</button>
 
     <main class="profile">
-        <h2>User Profile</h2>
+        <h2>Your Profile</h2>
         <div class="profile-card">
-            <h3 id="username">Loading...</h3>
-            <p id="email">Loading...</p>
+            <form id="profile-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="Loading...">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="Loading...">
+                </div>
+                <button type="submit">Update Profile</button>
+            </form>
+            <p id="error-message" class="error"></p>
         </div>
         <div class="profile-links">
-            <a href="search.html#favorites">View Favorites</a>
-            <a href="search.html#download-history">View Download History</a>
+            <a href="search.html">Back to Search</a>
         </div>
-        <p id="error-message" class="error"></p>
+        <div class="favorites">
+            <h3>Favorites</h3>
+            <p>Loading favorites...</p>
+        </div>
+        <div class="download-history">
+            <h3>Download History</h3>
+            <p>Loading download history...</p>
+        </div>
     </main>
 
     <footer>
-        <p>Powered by <a href="https://unsplash.com" target="_blank">Unsplash</p>
+        <p>Powered by <a href="https://unsplash.com" target="_blank">Unsplash</a></p>
         <p>© 2025 Image Search App</p>
     </footer>
 
     <script src="js/utils.js" type="module"></script>
-    <script type="module">
-        import { initTheme, initNavigation } from './js/utils.js';
-        initTheme();
-        initNavigation();
-
-        const token = localStorage.getItem('token');
-        const errorMessage = document.getElementById('error-message');
-
-        if (!token) {
-            window.location.href = 'register.html';
-        }
-
-        const GRAPHQL_URL = 'http://localhost:6000/graphql'; // Update for production
-
-        // Fetch user profile (mocked for now, replace with GraphQL query)
-        async function loadUserProfile() {
-            try {
-                // Mocked data (replace with actual query when backend is ready)
-                let user = { username: 'User', email: 'user@example.com' };
-
-                // Uncomment when backend is ready
-                /*
-                const query = `
-                    query {
-                        getUserProfile {
-                            username
-                            email
-                        }
-                    }`;
-                const res = await fetch(GRAPHQL_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({ query }),
-                });
-                const { data, errors } = await res.json();
-                if (errors) throw new Error(errors[0].message);
-                user = data.getUserProfile;
-                */
-            
-                document.getElementById('username').textContent = user.username;
-                document.getElementById('email').textContent = user.email;
-            } catch (error) {
-                errorMessage.textContent = 'Failed to load profile. Using default data.';
-                document.getElementById('username').textContent = 'Guest User';
-                document.getElementById('email').textContent = 'guest@example.com';
-            }
-        }
-
-        loadUserProfile();
-
-        // Logout
-        document.getElementById('logout-link').addEventListener('click', () => {
-            localStorage.removeItem('token');
-            localStorage.removeItem('downloadHistory');
-            window.location.href = 'landing.html';
-        });
-    </script>
+    <script src="js/profile.js" type="module"></script>
 </body>
 </html>

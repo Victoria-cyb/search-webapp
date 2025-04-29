@@ -35,9 +35,11 @@ export function updateHistory(query, searchImages) {
         button.textContent = item;
         button.addEventListener('click', () => {
             const searchInput = document.getElementById('search-input');
-            if (searchInput) {
+            if (searchInput && searchImages) {
                 searchInput.value = item;
                 searchImages();
+            } else {
+                window.location.href = `search.html?query=${encodeURIComponent(item)}`;
             }
         });
         searchHistory.appendChild(button);
@@ -62,23 +64,23 @@ export function initNavigation() {
         if (token) {
             loginLink.style.display = 'none';
             registerLink.style.display = 'none';
-            landingLink.style.display = 'none';
-            indexLink.style.display = 'none';
-            searchLink.style.display = 'none';
-            aboutLink.style.display = 'none';
-            contactLink.style.display = 'none';
             logoutLink.style.display = 'inline';
             profileLink.style.display = 'inline';
-        } else {
-            loginLink.style.display = 'inline';
-            registerLink.style.display = 'inline';
             landingLink.style.display = 'inline';
             indexLink.style.display = 'inline';
             searchLink.style.display = 'inline';
             aboutLink.style.display = 'inline';
             contactLink.style.display = 'inline';
+        } else {
+            loginLink.style.display = 'inline';
+            registerLink.style.display = 'inline';
             logoutLink.style.display = 'none';
             profileLink.style.display = 'none';
+            landingLink.style.display = 'inline';
+            indexLink.style.display = 'inline';
+            searchLink.style.display = 'inline'; // Ensure search is accessible
+            aboutLink.style.display = 'inline';
+            contactLink.style.display = 'inline';
         }
     } else {
         console.warn('initNavigation: Some nav links missing', {
@@ -100,6 +102,25 @@ export function initNavigation() {
             hamburger: !!hamburger,
             navLinks: !!navLinks,
             page: window.location.pathname
+        });
+    }
+
+    if (logoutLink) {
+        logoutLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Logout clicked');
+            localStorage.removeItem('token');
+            localStorage.removeItem('downloadHistory');
+            loginLink.style.display = 'inline';
+            registerLink.style.display = 'inline';
+            logoutLink.style.display = 'none';
+            profileLink.style.display = 'none';
+            landingLink.style.display = 'inline';
+            indexLink.style.display = 'inline';
+            searchLink.style.display = 'inline';
+            aboutLink.style.display = 'inline';
+            contactLink.style.display = 'inline';
+            window.location.href = 'landing.html';
         });
     }
 }

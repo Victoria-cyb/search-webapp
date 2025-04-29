@@ -9,6 +9,7 @@ const authMiddleware = require('./middleware/auth');
 const connectDB = require('./config/db');
 const User = require('./models/User');
 const Download = require('./models/Download');
+const axios = require('axios');
 require('dotenv').config();
 
 const app = express();
