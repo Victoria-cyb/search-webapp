@@ -15,7 +15,7 @@ console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
 
 const app = express();
 
-app.use(cors())
+app.use(cors({ origin: 'http://127.0.0.1:5500' }))
 
 const resolvers = {
   Query: {
