@@ -79,7 +79,7 @@ if (formEl && inputEl && searchResults && showMore) {
     };
 
     const GRAPHQL_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? 'http://localhost:6000/graphql'
+        ? 'http://localhost:3000/graphql'
         : 'https://search-webapp.onrender.com/graphql';
 
     // Initialize filters and history based on login status
@@ -228,7 +228,9 @@ if (formEl && inputEl && searchResults && showMore) {
                 },
                 body: JSON.stringify({ query }),
             });
+            console.log('Fetch response status:', res.status, res.statusText);
             const { data, errors } = await res.json();
+            console.log('GraphQL response:', { data, errors });
             if (errors) {
                 console.error('searchImages errors:', JSON.stringify(errors, null, 2));
                 throw new Error(errors[0].message);
@@ -431,7 +433,7 @@ if (formEl && inputEl && searchResults && showMore) {
                 console.log('Favorite buttons:', document.querySelectorAll('.search-result button:last-of-type').length);
             }, 1000);
         } catch (error) {
-            console.error('Error fetching images:', error.message);
+            console.error('Error fetching images:', error.message, error.stack);
             searchResults.innerHTML = '<p>Sorry, something went wrong: ' + error.message + '</p>';
             showMore.style.display = 'none';
         }

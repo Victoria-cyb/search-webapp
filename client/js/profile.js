@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 const GRAPHQL_URL = window.location.hostname === 'localhost'
-    ? 'http://localhost:6000/graphql'
+    ? 'http://localhost:3000/graphql'
     : 'https://search-webapp.onrender.com/graphql';
 
 const profileForm = document.getElementById('profile-form');

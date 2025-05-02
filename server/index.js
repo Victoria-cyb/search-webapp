@@ -15,7 +15,7 @@ console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
 
 const app = express();
 
-app.use(cors())
+app.use(cors({ origin: 'http://127.0.0.1:5500' }))
 
 const resolvers = {
   Query: {
@@ -43,7 +43,7 @@ const startServer = async () => {
   await server.start();
   server.applyMiddleware({ app });
 
-  const PORT = process.env.PORT || 6000;
+  const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}${server.graphqlPath}`);
   });
