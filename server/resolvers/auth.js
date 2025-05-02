@@ -45,11 +45,13 @@ const auth = {
 
           googleRegister: async (_, { googleToken }, { User }) => {
             try {
+              console.log('googleRegister: Verifying token, GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
               const ticket = await client.verifyIdToken({
                 idToken: googleToken,
                 audience: process.env.GOOGLE_CLIENT_ID,
               });
               const payload = ticket.getPayload();
+              console.log('googleRegister: Token payload:', payload);
               const { email, name } = payload;
       
               let user = await User.findOne({ email });
@@ -73,19 +75,23 @@ const auth = {
         await user.save();
 
         const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        console.log('googleRegister: User created, token:', token);
         return { token, user };
       } catch (error) {
+        console.error('googleRegister: Error:', error.message, 'Stack:', error.stack);
         throw new AuthenticationError(error.message || 'Google registration failed');
       }
     },
 
     googleLogin: async (_, { googleToken }, { User }) => {
         try {
+          console.log('googleLogin: Verifying token, GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
           const ticket = await client.verifyIdToken({
             idToken: googleToken,
             audience: process.env.GOOGLE_CLIENT_ID,
           });
           const payload = ticket.getPayload();
+          console.log('googleLogin: Token payload:', payload);
           const { email } = payload;
   
           const user = await User.findOne({ email });
@@ -94,8 +100,10 @@ const auth = {
           }
   
           const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+          console.log('googleLogin: User found, token:', token);
           return { token, user };
         } catch (error) {
+          console.error('googleLogin: Error:', error.message, 'Stack:', error.stack);
           throw new AuthenticationError(error.message || 'Google login failed');
         }
       },

@@ -11,6 +11,7 @@ const User = require('./models/User');
 const Download = require('./models/Download');
 const axios = require('axios');
 require('dotenv').config();
+console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
 
 const app = express();
 

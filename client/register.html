@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Register for the Image Search App">
     <title>Register - Visualviews</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css"> <!-- Adjusted path -->
 </head>
 <body>
     <header>
@@ -46,52 +46,31 @@
             <button type="submit">Register</button>
         </form>
         <p>Or register with Google:</p>
-        <div id="g_id_signin" data-client_id="115641619754-3dmhnr5eb01hk4l9qkj4r0nfh8bo4f97.apps.googleusercontent.com" data-callback="handleGoogleRegister"></div>
+        <button id="google-signin-button" class="google-signin-btn">
+            <img src="https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_32x32dp.png" alt="Google Logo" class="google-logo">
+            Register with Google
+        </button>
         <p>Already have an account? <a href="login.html">Log in</a></p>
         <p id="error-message" class="error"></p>
     </main>
 
     <footer>
-        <p>Powered by <a href="https://unsplash.com" target="_blank">Unsplash</p>
+        <p>Powered by <a href="https://unsplash.com" target="_blank">Unsplash</a></p>
         <p>© Visualviews</p>
     </footer>
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="js/utils.js" type="module"></script>
-    <script type="module" src="js/script.js"></script>
+    <script src="js/utils.js" type="module"></script> <!-- Adjusted path -->
+    <script type="module" src="js/script.js"></script> <!-- Adjusted path -->
     <script type="module">
-        //  console.log('register.html: Inline script running');
-        //   import { initTheme, initNavigation } from './js/utils.js';
-        //   initTheme();
-        //    initNavigation();
-
-        // // Fallback hamburger menu logic
-        // document.addEventListener('DOMContentLoaded', () => {
-        //     console.log('register.html: DOM fully loaded for inline script');
-        //     const hamburger = document.querySelector('.hamburger');
-        //     const navLinks = document.querySelector('.nav-links');
-        //     if (hamburger && navLinks) {
-        //         console.log('register.html: Initializing fallback hamburger menu');
-        //         hamburger.addEventListener('click', () => {
-        //             console.log('register.html: Hamburger clicked, toggling .open');
-        //             navLinks.classList.toggle('open');
-        //             hamburger.textContent = navLinks.classList.contains('open') ? '✕' : '☰';
-        //         });
-        //     } else {
-        //         console.error('register.html: Hamburger or navLinks not found in fallback', {
-        //             hamburger: !!hamburger,
-        //             navLinks: !!navLinks
-        //         });
-        //     }
-        // });
-
-        const GRAPHQL_URL = window.location.hostname === 'localhost'
-        ? 'http://localhost:6000/graphql'
-        : 'https://search-webapp.onrender.com/graphql';
+        const GRAPHQL_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:6000/graphql'
+            : 'https://search-webapp.onrender.com/graphql';
 
         const form = document.getElementById('register-form');
         const errorMessage = document.getElementById('error-message');
         const submitButton = form.querySelector('button[type="submit"]');
+        const googleSignInButton = document.getElementById('google-signin-button');
 
         // Client-side validation
         function validateForm(username, email, password) {
@@ -111,6 +90,7 @@
             return true;
         }
 
+        // Handle email/password registration
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = document.getElementById('username').value;
@@ -150,37 +130,52 @@
             }
         });
 
-        window.handleGoogleRegister = async (response) => {
-            const googleToken = response.credential;
-            const query = `
-                mutation {
-                    googleRegister(googleToken: "${googleToken}") {
-                        token
-                        user { id email username }
-                    }
-                }`;
-            try {
-                const res = await fetch(GRAPHQL_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query }),
-                });
-                const { data, errors } = await res.json();
-                if (errors) throw new Error(errors[0].message);
-                if (data.googleRegister) {
-                    localStorage.setItem('token', data.googleRegister.token);
-                    window.location.href = 'search.html';
-                }
-            } catch (error) {
-                errorMessage.textContent = error.message || 'Failed to register with Google. Please try again.';
+        // Handle Google registration
+        googleSignInButton.addEventListener('click', () => {
+            // Check if running via file://
+            if (window.location.protocol === 'file:') {
+                console.error('Google Sign-In not supported via file://. Serve files via http://localhost (e.g., VS Code Live Server on port 5500).');
+                errorMessage.textContent = 'Google Sign-In requires a web server. Please use a server like VS Code Live Server.';
+                return;
             }
-        };
 
-         document.getElementById('logout-link').addEventListener('click', () => {
-          localStorage.removeItem('token');
-         localStorage.removeItem('downloadHistory');
-             window.location.href = 'landing.html';
-          });
+            function promptGoogleSignIn(attempt = 1, maxAttempts = 30) {
+                if (attempt > maxAttempts) {
+                    console.error('Failed to show Google Sign-In prompt after', maxAttempts, 'attempts.');
+                    errorMessage.textContent = 'Unable to show Google Sign-In prompt. Please try again later.';
+                    return;
+                }
+                if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+                    try {
+                        google.accounts.id.prompt((notification) => {
+                            if (notification.isNotDisplayed()) {
+                                console.error('Google Sign-In prompt not displayed:', notification.getNotDisplayedReason());
+                                errorMessage.textContent = `Google Sign-In failed: ${notification.getNotDisplayedReason()}`;
+                            } else if (notification.isSkippedMoment()) {
+                                console.warn('Google Sign-In prompt skipped:', notification.getSkippedReason());
+                                errorMessage.textContent = `Google Sign-In skipped: ${notification.getSkippedReason()}`;
+                            } else if (notification.isDismissedMoment()) {
+                                console.log('Google Sign-In prompt dismissed:', notification.getDismissedReason());
+                            }
+                        });
+                        console.log('Google Sign-In prompt triggered on attempt', attempt);
+                    } catch (error) {
+                        console.error('Google Sign-In prompt error on attempt', attempt, ':', error.message);
+                        setTimeout(() => promptGoogleSignIn(attempt + 1, maxAttempts), 100);
+                    }
+                } else {
+                    console.log('Google script not loaded yet, retrying attempt', attempt, 'of', maxAttempts);
+                    setTimeout(() => promptGoogleSignIn(attempt + 1, maxAttempts), 100);
+                }
+            }
+            promptGoogleSignIn();
+        });
+
+        document.getElementById('logout-link').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('downloadHistory');
+            window.location.href = 'landing.html';
+        });
     </script>
 </body>
 </html>

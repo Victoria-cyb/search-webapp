@@ -2,10 +2,44 @@ import { initTheme, updateHistory, initNavigation } from './utils.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('script.js: DOM fully loaded for', window.location.pathname);
+
+    // Check if running via file://
+    if (window.location.protocol === 'file:') {
+        console.error('script.js: Google Sign-In not supported via file://. Serve files via http://localhost (e.g., VS Code Live Server on port 5500).');
+        return;
+    }
+
     initTheme();
     initNavigation();
+
+    // Initialize Google Sign-In with robust error handling
+    function initializeGoogleSignIn(attempt = 1, maxAttempts = 30) {
+        if (attempt > maxAttempts) {
+            console.error('script.js: Failed to initialize Google Sign-In after', maxAttempts, 'attempts.');
+            return;
+        }
+        if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+            try {
+                google.accounts.id.initialize({
+                    client_id: '115641619754-3dmhnr5eb01hk4l9qkj4r0nfh8bo4f97.apps.googleusercontent.com',
+                    callback: window.handleGoogleCredentialResponse,
+                    auto_select: false,
+                    context: window.location.pathname.includes('login') ? 'signin' : 'signup',
+                });
+                console.log('script.js: Google Sign-In initialized on attempt', attempt);
+            } catch (error) {
+                console.error('script.js: Google Sign-In initialization error on attempt', attempt, ':', error.message);
+                setTimeout(() => initializeGoogleSignIn(attempt + 1, maxAttempts), 100);
+            }
+        } else {
+            console.log('script.js: Google script not loaded, retrying attempt', attempt, 'of', maxAttempts);
+            setTimeout(() => initializeGoogleSignIn(attempt + 1, maxAttempts), 100);
+        }
+    }
+    initializeGoogleSignIn();
 });
 
+// Rest of the file remains unchanged
 const formEl = document.querySelector('form');
 const inputEl = document.getElementById('search-input');
 const searchResults = document.querySelector('.search-results');
@@ -19,25 +53,50 @@ if (formEl && inputEl && searchResults && showMore) {
     let page = 1;
     let totalPages = 1;
     let token = localStorage.getItem('token') || null;
+
+    // Validate token
+    console.log('script.js: Initial token check:', token);
+    if (token) {
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            if (payload.exp * 1000 < Date.now()) {
+                console.log('script.js: Token expired, clearing');
+                localStorage.removeItem('token');
+                token = null;
+            }
+        } catch (error) {
+            console.log('script.js: Invalid token, clearing', error.message);
+            localStorage.removeItem('token');
+            token = null;
+        }
+    }
+    console.log('script.js: Token after validation:', token);
+
     let filters = {
         orientation: '',
         color: '',
         size: ''
     };
 
-    const GRAPHQL_URL = window.location.hostname === 'localhost'
+    const GRAPHQL_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://localhost:6000/graphql'
         : 'https://search-webapp.onrender.com/graphql';
 
-    // Initialize filters for all users
-    document.querySelector('.filters')?.classList.add('active');
+    // Initialize filters and history based on login status
+    const filtersSection = document.querySelector('.filters');
     if (token) {
+        console.log('script.js: User logged in, showing filters');
+        filtersSection?.classList.add('active');
         displayFavorites();
         displayDownloadHistory();
+    } else {
+        console.log('script.js: No user logged in, hiding filters');
+        filtersSection?.classList.remove('active');
     }
 
     // Google OAuth
-    window.handleGoogleLogin = async (response) => {
+    window.handleGoogleCredentialResponse = async (response) => {
+        console.log('script.js: Handling Google credential response');
         const googleToken = response.credential;
         let query = `
             mutation {
@@ -72,38 +131,79 @@ if (formEl && inputEl && searchResults && showMore) {
             if (data.googleLogin || data.googleRegister) {
                 token = data.googleLogin?.token || data.googleRegister?.token;
                 localStorage.setItem('token', token);
-                document.querySelector('.filters')?.classList.add('active');
+                filtersSection?.classList.add('active');
                 displayFavorites();
                 displayDownloadHistory();
+                showNotification(data.googleLogin ? 'Logged in with Google!' : 'Registered with Google!', false, 'success');
                 window.location.href = 'search.html';
             }
         } catch (error) {
-            console.error('Google auth error:', JSON.stringify(error, null, 2));
-            showNotification('Failed to authenticate with Google: ' + error.message);
+            console.error('Google auth error:', error.message);
+            showNotification('Failed to authenticate with Google: ' + error.message, false, 'error');
         }
     };
 
-    function showNotification(message) {
-        const modal = document.createElement('div');
-        modal.className = 'notification-modal';
-        modal.innerHTML = `
-            <div class="notification-content">
-                <span class="close">×</span>
-                <p>${message}</p>
-                <button onclick="window.location.href='register.html'">Register</button>
-                <button class="close-btn">Close</button>
-            </div>`;
-        document.body.appendChild(modal);
-        const closeButtons = modal.querySelectorAll('.close, .close-btn');
-        closeButtons.forEach(btn => {
-            btn.addEventListener('click', () => modal.remove());
-        });
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) modal.remove();
-        });
+    function showNotification(message, showRegister = true, type = 'info') {
+        console.log('showNotification called:', { message, showRegister, type });
+        try {
+            // Remove existing modals
+            document.querySelectorAll('.notification-modal').forEach(m => m.remove());
+            const modal = document.createElement('div');
+            modal.className = `notification-modal ${type}`;
+            modal.innerHTML = `
+                <div class="notification-content">
+                    <p>${message}</p>
+                    <div class="notification-buttons">
+                        ${showRegister ? '<button class="register-btn">Register</button>' : ''}
+                        <button class="close-btn">Close</button>
+                    </div>
+                </div>`;
+            console.log('showNotification: Appending modal to body');
+            document.body.appendChild(modal);
+
+            // Force visibility
+            modal.style.display = 'block';
+            modal.style.visibility = 'visible';
+            modal.style.zIndex = '1002';
+            console.log('showNotification: Modal styles:', {
+                display: modal.style.display,
+                visibility: modal.style.visibility,
+                zIndex: modal.style.zIndex
+            });
+
+            const registerBtn = modal.querySelector('.register-btn');
+            if (registerBtn) {
+                console.log('showNotification: Register button found');
+                registerBtn.addEventListener('click', () => {
+                    console.log('Register button clicked, navigating to register.html');
+                    window.location.href = 'register.html';
+                });
+            }
+
+            const closeBtn = modal.querySelector('.close-btn');
+            if (closeBtn) {
+                console.log('showNotification: Close button found');
+                closeBtn.addEventListener('click', () => {
+                    console.log('Close button clicked');
+                    modal.remove();
+                });
+            }
+
+            // Auto-close after 7 seconds
+            setTimeout(() => {
+                console.log('Auto-removing notification');
+                if (modal.parentNode) modal.remove();
+            }, 5000);
+
+            console.log('showNotification: Modal in DOM:', !!document.querySelector('.notification-modal'));
+        } catch (error) {
+            console.error('showNotification error:', error.message);
+            alert(message + (showRegister ? ' Please register at register.html.' : ''));
+        }
     }
 
     async function searchImages(newPage = page) {
+        console.log('searchImages called:', { inputData, page: newPage, filters });
         try {
             page = newPage;
             inputData = inputEl.value.trim();
@@ -142,7 +242,8 @@ if (formEl && inputEl && searchResults && showMore) {
                 return;
             }
 
-            results.forEach((result) => {
+            console.log('searchImages: Rendering', results.length, 'results');
+            results.forEach((result, index) => {
                 const imageWrapper = document.createElement('div');
                 imageWrapper.classList.add('search-result');
                 const image = document.createElement('img');
@@ -150,6 +251,7 @@ if (formEl && inputEl && searchResults && showMore) {
                 image.alt = result.alt_description;
                 image.loading = 'lazy';
                 image.addEventListener('click', () => {
+                    console.log('Image clicked:', result.id);
                     const modal = document.createElement('div');
                     modal.className = 'modal';
                     modal.innerHTML = `
@@ -171,16 +273,75 @@ if (formEl && inputEl && searchResults && showMore) {
                 const downloadBtn = document.createElement('button');
                 downloadBtn.textContent = 'Download';
                 downloadBtn.disabled = !token;
-                downloadBtn.addEventListener('click', async () => {
+                console.log('searchImages: Creating downloadBtn, disabled:', downloadBtn.disabled, 'token:', token);
+                downloadBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation(); // Prevent click from bubbling to parent elements
+                    e.preventDefault(); // Prevent any default behavior
+                    console.log('Download button clicked, token:', token, 'result:', result.id);
+
                     if (!token) {
-                        showNotification('Please register to download images.');
+                        console.log('No token, triggering notification');
+                        showNotification('Please register and log in to download images.', true, 'info');
                         return;
                     }
+
+                    // Validate token before proceeding
                     try {
+                        const payload = JSON.parse(atob(token.split('.')[1]));
+                        if (payload.exp * 1000 < Date.now()) {
+                            console.log('Token expired during download, clearing');
+                            localStorage.removeItem('token');
+                            token = null;
+                            showNotification('Session expired. Please log in again.', true, 'error');
+                            downloadBtn.disabled = true;
+                            return;
+                        }
+                    } catch (error) {
+                        console.log('Invalid token during download, clearing', error.message);
+                        localStorage.removeItem('token');
+                        token = null;
+                        showNotification('Invalid session. Please log in again.', true, 'error');
+                        downloadBtn.disabled = true;
+                        return;
+                    }
+
+                    showNotification('Download started...', false, 'ongoing');
+                    try {
+                        // Fetch the image
+                        const response = await fetch(result.urls.full, {
+                            method: 'GET',
+                            headers: {
+                                // Add any necessary headers for Unsplash API if required
+                            },
+                        });
+                        if (!response.ok) {
+                            throw new Error(`Failed to fetch image: ${response.statusText}`);
+                        }
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${result.id || 'image'}.jpg`;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+
+                        // Track the download via GraphQL mutation
                         const mutation = `
-                            mutation { trackDownload(imageId: "${result.id}", url: "${result.urls.full}", alt_description: "${result.alt_description || ''}") { id url alt_description timestamp } }
-                        `;
-                        const res = await fetch(GRAPHQL_URL, {
+                            mutation { 
+                                trackDownload(
+                                    imageId: "${result.id}", 
+                                    url: "${result.urls.full}", 
+                                    alt_description: "${result.alt_description || ''}"
+                                ) { 
+                                    id 
+                                    url 
+                                    alt_description 
+                                    timestamp 
+                                } 
+                            }`;
+                        const trackResponse = await fetch(GRAPHQL_URL, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -188,26 +349,33 @@ if (formEl && inputEl && searchResults && showMore) {
                             },
                             body: JSON.stringify({ query: mutation }),
                         });
-                        const { data, errors } = await res.json();
+                        const { data, errors } = await trackResponse.json();
                         if (errors) {
                             console.error('trackDownload errors:', JSON.stringify(errors, null, 2));
                             throw new Error(errors[0].message);
                         }
-                        window.location.href = result.urls.full;
-                        displayDownloadHistory();
+
+                        showNotification('Image downloaded successfully!', false, 'success');
+                        displayDownloadHistory(); // Refresh download history
                     } catch (error) {
                         console.error('Download error:', error.message);
-                        showNotification('Failed to download image: ' + error.message);
+                        showNotification(`Failed to download image: ${error.message}`, false, 'error');
                     }
                 });
+
                 const favoriteBtn = document.createElement('button');
                 favoriteBtn.textContent = 'Favorite';
                 favoriteBtn.disabled = !token;
-                favoriteBtn.addEventListener('click', async () => {
+                console.log('searchImages: Creating favoriteBtn, disabled:', favoriteBtn.disabled, 'token:', token);
+                favoriteBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    console.log('Favorite button clicked, token:', token, 'result:', result.id);
                     if (!token) {
-                        showNotification('Please register to add favorites.');
+                        console.log('No token, triggering notification');
+                        showNotification('Please register and log in to add favorites.', true, 'info');
                         return;
                     }
+                    showNotification('Adding to favorites...', false, 'ongoing');
                     const mutation = `
                         mutation {
                             addFavorite(image: {
@@ -234,23 +402,34 @@ if (formEl && inputEl && searchResults && showMore) {
                             console.error('addFavorite errors:', JSON.stringify(errors, null, 2));
                             throw new Error(errors[0].message);
                         }
+                        showNotification('Image added to favorites!', false, 'success');
                         displayFavorites();
                     } catch (error) {
                         console.error('Error adding favorite:', error.message);
-                        showNotification('Failed to add favorite: ' + error.message);
+                        showNotification('Failed to add favorite: ' + error.message, false, 'error');
                     }
                 });
+
                 imageWrapper.appendChild(image);
                 imageWrapper.appendChild(imageLink);
                 imageWrapper.appendChild(downloadBtn);
                 imageWrapper.appendChild(favoriteBtn);
                 searchResults.appendChild(imageWrapper);
+                console.log('searchImages: Added result', index, 'to DOM');
             });
 
             totalPages = total_pages;
             updatePagination();
             updateHistory(inputData, searchImages);
             updateShareableLink();
+
+            console.log('searchImages: Total buttons rendered:', document.querySelectorAll('.search-result button').length);
+            // Debug button existence
+            setTimeout(() => {
+                console.log('Buttons after 1s:', document.querySelectorAll('.search-result button').length);
+                console.log('Download buttons:', document.querySelectorAll('.search-result button:first-of-type').length);
+                console.log('Favorite buttons:', document.querySelectorAll('.search-result button:last-of-type').length);
+            }, 1000);
         } catch (error) {
             console.error('Error fetching images:', error.message);
             searchResults.innerHTML = '<p>Sorry, something went wrong: ' + error.message + '</p>';
@@ -259,6 +438,7 @@ if (formEl && inputEl && searchResults && showMore) {
     }
 
     function updatePagination() {
+        console.log('updatePagination called:', { page, totalPages });
         showMore.innerHTML = '';
         if (page > 1) {
             const prevBtn = document.createElement('button');
@@ -277,6 +457,7 @@ if (formEl && inputEl && searchResults && showMore) {
 
     async function displayFavorites(userFavorites = null) {
         if (!token) return;
+        console.log('displayFavorites called');
         try {
             if (!userFavorites) {
                 const query = `
@@ -314,6 +495,7 @@ if (formEl && inputEl && searchResults && showMore) {
                     <a href="${f.links.html}" target="_blank">${f.alt_description || 'View on Unsplash'}</a>
                     <button class="remove-favorite-btn">Remove</button>`;
                 wrapper.querySelector('.remove-favorite-btn').addEventListener('click', async () => {
+                    showNotification('Removing from favorites...', false, 'ongoing');
                     const mutation = `
                         mutation {
                             removeFavorite(imageId: "${f.id}") {
@@ -334,10 +516,11 @@ if (formEl && inputEl && searchResults && showMore) {
                             console.error('removeFavorite errors:', JSON.stringify(errors, null, 2));
                             throw new Error(errors[0].message);
                         }
+                        showNotification('Image removed from favorites!', false, 'success');
                         displayFavorites();
                     } catch (error) {
                         console.error('Error removing favorite:', error.message);
-                        showNotification('Failed to remove favorite: ' + error.message);
+                        showNotification('Failed to remove favorite: ' + error.message, false, 'error');
                     }
                 });
                 favoritesSection.appendChild(wrapper);
@@ -350,6 +533,7 @@ if (formEl && inputEl && searchResults && showMore) {
 
     async function displayDownloadHistory() {
         if (!token) return;
+        console.log('displayDownloadHistory called');
         try {
             const query = `
                 query {

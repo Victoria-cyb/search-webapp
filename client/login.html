@@ -42,13 +42,16 @@
             <button type="submit">Log In</button>
         </form>
         <p>Or log in with Google:</p>
-        <div id="g_id_signin" data-client_id="115641619754-3dmhnr5eb01hk4l9qkj4r0nfh8bo4f97.apps.googleusercontent.com" data-callback="handleGoogleLogin"></div>
-        <p>Don't have an account? <a href="login.html#register">Register</a></p>
+        <button id="google-signin-button" class="google-signin-btn">
+            <img src="https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_32x32dp.png" alt="Google Logo" class="google-logo">
+            Log in with Google
+        </button>
+        <p>Don't have an account? <a href="register.html">Register</a></p>
         <p id="error-message" class="error"></p>
     </main>
 
     <footer>
-        <p>Powered by <a href="https://unsplash.com" target="_blank">Visualviews</p>
+        <p>Powered by <a href="https://unsplash.com" target="_blank">Unsplash</a></p>
         <p>© 2025 Visualviews App</p>
     </footer>
 
@@ -56,16 +59,14 @@
     <script src="js/utils.js" type="module"></script>
     <script type="module" src="js/script.js"></script>
     <script type="module">
-        //   import { initNavigation } from './js/utils.js';
-        //   initNavigation();
+        const GRAPHQL_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:6000/graphql'
+            : 'https://search-webapp.onrender.com/graphql';
 
-        const GRAPHQL_URL = window.location.hostname === 'localhost'
-        ? 'http://localhost:6000/graphql'
-        : 'https://search-webapp.onrender.com/graphql';
-        
         const form = document.getElementById('login-form');
         const errorMessage = document.getElementById('error-message');
         const submitButton = form.querySelector('button[type="submit"]');
+        const googleSignInButton = document.getElementById('google-signin-button');
 
         // Client-side validation
         function validateForm(email, password) {
@@ -121,40 +122,51 @@
         });
 
         // Handle Google login
-        window.handleGoogleLogin = async (response) => {
-            const googleToken = response.credential;
-            const query = `
-                mutation {
-                    googleLogin(googleToken: "${googleToken}") {
-                        token
-                        user { id email favorites { id urls { small regular full } alt_description links { html } user { name } } }
-                    }
-                }`;
-            try {
-                const res = await fetch(GRAPHQL_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query }),
-                });
-                const { data, errors } = await res.json();
-                if (errors) throw new Error(errors[0].message);
-                if (data.googleLogin) {
-                    localStorage.setItem('token', data.googleLogin.token);
-                    window.location.href = 'search.html';
-                }
-            } catch (error) {
-                errorMessage.textContent = error.message || 'Failed to log in with Google. Please try again.';
+        googleSignInButton.addEventListener('click', () => {
+            // Check if running via file://
+            if (window.location.protocol === 'file:') {
+                console.error('Google Sign-In not supported via file://. Serve files via http://localhost (e.g., VS Code Live Server on port 5500).');
+                errorMessage.textContent = 'Google Sign-In requires a web server. Please use a server like VS Code Live Server.';
+                return;
             }
-        };
+
+            function promptGoogleSignIn(attempt = 1, maxAttempts = 30) {
+                if (attempt > maxAttempts) {
+                    console.error('Failed to show Google Sign-In prompt after', maxAttempts, 'attempts.');
+                    errorMessage.textContent = 'Unable to show Google Sign-In prompt. Please try again later.';
+                    return;
+                }
+                if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+                    try {
+                        google.accounts.id.prompt((notification) => {
+                            if (notification.isNotDisplayed()) {
+                                console.error('Google Sign-In prompt not displayed:', notification.getNotDisplayedReason());
+                                errorMessage.textContent = `Google Sign-In failed: ${notification.getNotDisplayedReason()}`;
+                            } else if (notification.isSkippedMoment()) {
+                                console.warn('Google Sign-In prompt skipped:', notification.getSkippedReason());
+                                errorMessage.textContent = `Google Sign-In skipped: ${notification.getSkippedReason()}`;
+                            } else if (notification.isDismissedMoment()) {
+                                console.log('Google Sign-In prompt dismissed:', notification.getDismissedReason());
+                            }
+                        });
+                        console.log('Google Sign-In prompt triggered on attempt', attempt);
+                    } catch (error) {
+                        console.error('Google Sign-In prompt error on attempt', attempt, ':', error.message);
+                        setTimeout(() => promptGoogleSignIn(attempt + 1, maxAttempts), 100);
+                    }
+                } else {
+                    console.log('Google script not loaded yet, retrying attempt', attempt, 'of', maxAttempts);
+                    setTimeout(() => promptGoogleSignIn(attempt + 1, maxAttempts), 100);
+                }
+            }
+            promptGoogleSignIn();
+        });
 
         document.getElementById('logout-link').addEventListener('click', () => {
             localStorage.removeItem('token');
             localStorage.removeItem('downloadHistory');
             window.location.href = 'landing.html';
         });
-
-       
-       
     </script>
 </body>
 </html>
