@@ -708,13 +708,14 @@ form {
   max-width: 400px;
   z-index: 1001;
   animation: slideInNotification 0.3s ease-out;
-  visibility: visible !important;
-  opacity: 1 !important;
-  z-index: 1001 !important;
+  display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    z-index: 1002 !important;
 }
 
 .notification-modal * {
-  visibility: visible !important;
+  visibility: visible ;
 }
 
 .notification-content {

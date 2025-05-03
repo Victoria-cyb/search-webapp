@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initNavigation();
 
+
+
     // Initialize Google Sign-In with robust error handling
     function initializeGoogleSignIn(attempt = 1, maxAttempts = 30) {
         if (attempt > maxAttempts) {
@@ -21,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
             try {
                 google.accounts.id.initialize({
-                    client_id: '115641619754-3dmhnr5eb01hk4l9qkj4r0nfh8bo4f97.apps.googleusercontent.com',
+                    client_id: '115641619754-kg6l8nsenfabli97eag3siompothqoqg.apps.googleusercontent.com',
                     callback: window.handleGoogleCredentialResponse,
                     auto_select: false,
                     context: window.location.pathname.includes('login') ? 'signin' : 'signup',
@@ -143,11 +145,12 @@ if (formEl && inputEl && searchResults && showMore) {
         }
     };
 
-    function showNotification(message, showRegister = true, type = 'info') {
+    window.showNotification = function(message, showRegister = true, type = 'info') {
         console.log('showNotification called:', { message, showRegister, type });
         try {
             // Remove existing modals
             document.querySelectorAll('.notification-modal').forEach(m => m.remove());
+
             const modal = document.createElement('div');
             modal.className = `notification-modal ${type}`;
             modal.innerHTML = `
@@ -158,22 +161,32 @@ if (formEl && inputEl && searchResults && showMore) {
                         <button class="close-btn">Close</button>
                     </div>
                 </div>`;
-            console.log('showNotification: Appending modal to body');
+
+
             document.body.appendChild(modal);
 
             // Force visibility
-            modal.style.display = 'block';
-            modal.style.visibility = 'visible';
-            modal.style.zIndex = '1002';
-            console.log('showNotification: Modal styles:', {
-                display: modal.style.display,
-                visibility: modal.style.visibility,
-                zIndex: modal.style.zIndex
-            });
+            // modal.style.display = 'flex';
+            // modal.style.visibility = 'visible';
+            // modal.style.zIndex = '1002';
+            // console.log('showNotification: Modal styles:', {
+            //     display: modal.style.display,
+            //     visibility: modal.style.visibility,
+            //     zIndex: modal.style.zIndex
+            // });
+
+            modal.style.display = 'flex';
+           modal.style.position = 'fixed';
+          modal.style.top = '20px';
+           modal.style.left = '50%';
+          modal.style.transform = 'translateX(-50%)';
+         modal.style.zIndex = '1002';
+         modal.style.opacity = '1';
+          modal.style.visibility = 'visible';
 
             const registerBtn = modal.querySelector('.register-btn');
             if (registerBtn) {
-                console.log('showNotification: Register button found');
+                
                 registerBtn.addEventListener('click', () => {
                     console.log('Register button clicked, navigating to register.html');
                     window.location.href = 'register.html';
@@ -182,21 +195,29 @@ if (formEl && inputEl && searchResults && showMore) {
 
             const closeBtn = modal.querySelector('.close-btn');
             if (closeBtn) {
-                console.log('showNotification: Close button found');
+                
                 closeBtn.addEventListener('click', () => {
                     console.log('Close button clicked');
                     modal.remove();
                 });
             }
 
-            // Auto-close after 7 seconds
-            setTimeout(() => {
+             // Auto-remove after 5 seconds, but only if not already removed
+        const autoCloseTimeout = setTimeout(() => {
+            if (modal.isConnected) {
                 console.log('Auto-removing notification');
-                if (modal.parentNode) modal.remove();
-            }, 5000);
+                modal.remove();
+            }
+        }, 5000);
 
-            console.log('showNotification: Modal in DOM:', !!document.querySelector('.notification-modal'));
-        } catch (error) {
+        // Clear timeout if modal is manually closed
+        closeBtn?.addEventListener('click', () => {
+            clearTimeout(autoCloseTimeout);
+        });
+
+        // console.log('showNotification: Modal in DOM:', !!document.querySelector('.notification-modal'));
+        }
+         catch (error) {
             console.error('showNotification error:', error.message);
             alert(message + (showRegister ? ' Please register at register.html.' : ''));
         }
@@ -274,7 +295,7 @@ if (formEl && inputEl && searchResults && showMore) {
                 imageLink.textContent = result.alt_description || 'View on Unsplash';
                 const downloadBtn = document.createElement('button');
                 downloadBtn.textContent = 'Download';
-                downloadBtn.disabled = !token;
+                // downloadBtn.disabled = !token;
                 console.log('searchImages: Creating downloadBtn, disabled:', downloadBtn.disabled, 'token:', token);
                 downloadBtn.addEventListener('click', async (e) => {
                     e.stopPropagation(); // Prevent click from bubbling to parent elements
@@ -282,7 +303,7 @@ if (formEl && inputEl && searchResults && showMore) {
                     console.log('Download button clicked, token:', token, 'result:', result.id);
 
                     if (!token) {
-                        console.log('No token, triggering notification');
+
                         showNotification('Please register and log in to download images.', true, 'info');
                         return;
                     }
@@ -367,13 +388,13 @@ if (formEl && inputEl && searchResults && showMore) {
 
                 const favoriteBtn = document.createElement('button');
                 favoriteBtn.textContent = 'Favorite';
-                favoriteBtn.disabled = !token;
+                // favoriteBtn.disabled = !token;
                 console.log('searchImages: Creating favoriteBtn, disabled:', favoriteBtn.disabled, 'token:', token);
                 favoriteBtn.addEventListener('click', async (e) => {
                     e.stopPropagation();
                     console.log('Favorite button clicked, token:', token, 'result:', result.id);
                     if (!token) {
-                        console.log('No token, triggering notification');
+                        
                         showNotification('Please register and log in to add favorites.', true, 'info');
                         return;
                     }

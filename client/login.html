@@ -130,7 +130,48 @@
                 return;
             }
 
-            function promptGoogleSignIn(attempt = 1, maxAttempts = 30) {
+        async function handleCredentialResponse(response) {
+                 console.log("Encoded JWT ID token: ", response.credential);
+                 // You can send this token to your backend to verify the user
+                 const query = `
+                    mutation {
+                        googleLogin(googleToken: "${googleToken}") {
+                            token
+                            user {
+                                id
+                                email
+                                favorites {
+                                    id
+                                    urls { small regular full }
+                                    alt_description
+                                    links { html }
+                                    user { name }
+                                }
+                            }
+                        }
+                    }
+                `;
+                try {
+                    const res = await fetch(GRAPHQL_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query }),
+                    });
+
+            const { data, errors } = await res.json();
+            if (errors) throw new Error(errors[0].message);
+
+            if (data.googleLogin) {
+                localStorage.setItem('token', data.googleLogin.token);
+                window.location.href = 'search.html';
+            }
+        } catch (error) {
+            console.error('Google login failed:', error.message);
+            errorMessage.textContent = error.message || 'Google login failed. Please try again.';
+        }
+    }
+
+function promptGoogleSignIn(attempt = 1, maxAttempts = 30) {
                 if (attempt > maxAttempts) {
                     console.error('Failed to show Google Sign-In prompt after', maxAttempts, 'attempts.');
                     errorMessage.textContent = 'Unable to show Google Sign-In prompt. Please try again later.';
@@ -138,6 +179,10 @@
                 }
                 if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
                     try {
+                        google.accounts.id.initialize({
+                     client_id: '115641619754-kg6l8nsenfabli97eag3siompothqoqg.apps.googleusercontent.com',
+                     callback: handleCredentialResponse,
+                    });
                         google.accounts.id.prompt((notification) => {
                             if (notification.isNotDisplayed()) {
                                 console.error('Google Sign-In prompt not displayed:', notification.getNotDisplayedReason());
@@ -160,7 +205,7 @@
                 }
             }
             promptGoogleSignIn();
-        });
+           });
 
         document.getElementById('logout-link').addEventListener('click', () => {
             localStorage.removeItem('token');
