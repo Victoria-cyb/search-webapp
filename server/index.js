@@ -4,6 +4,7 @@ const cors = require('cors');
 const passport = require('passport');
 const session = require('express-session');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const jwt = require ('jsonwebtoken');
 const typeDefs = require('./schemas/typeDefs');
 const authResolvers = require('./resolvers/auth');
 const imageResolvers = require('./resolvers/image');
@@ -17,6 +18,18 @@ require('dotenv').config();
 
 
 const app = express();
+
+function createJwtToken(user) {
+  return jwt.sign(
+    {
+      id: user._id,
+      email: user.email,
+      name: user.name,
+    },
+    process.env.JWT_SECRET || 'fallback_jwt_secret',
+    { expiresIn: '7d' }
+  );
+}
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'myDefaultSessionSecret',
@@ -66,11 +79,13 @@ app.use('/auth/google',
 app.use('/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/login' }),
   function (req, res) {
-    
-
-     // Option 2: use JWT and pass token via query param
-     const token = createJwtToken(req.user);
-     res.redirect(`http://127.0.0.1:5500/search.html?token=${token}`);
+    try {
+      const token = createJwtToken(req.user); // ✅ Uses the function defined above
+      res.redirect(`http://127.0.0.1:5500/search.html?token=${token}`);
+    } catch (err) {
+      console.error('JWT creation or redirect error:', err);
+      res.status(500).send('Internal Server Error during redirect');
+    }
   }
 );
 
