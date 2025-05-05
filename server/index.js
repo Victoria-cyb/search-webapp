@@ -58,6 +58,7 @@ async (accessToken, refreshToken, profile, done) => {
         googleId: profile.id,
         email: profile.emails[0].value,
         name: profile.displayName,
+        username,
       });
     }
     done(null, user);
