@@ -56,7 +56,7 @@ passport.use(new GoogleStrategy({
     console.log('Google profile:', profile);
     let user = await User.findOne({ googleId: profile.id });
     if (!user) {
-      const user = await User.findOne({ email: profile.emails[0].value }) ; // Use email prefix as username
+      user = await User.findOne({ email: profile.emails[0].value }) ; // Use email prefix as username
 
       if (user) {
         // Link the Google ID to the existing user
