@@ -56,12 +56,15 @@ passport.use(new GoogleStrategy({
     console.log('Google profile:', profile);
     let user = await User.findOne({ googleId: profile.id });
     if (!user) {
-      const user = profile.emails[0].value.split('@')[0]; // Use email prefix as username
+      const user = await User.findOne({ email: profile.emails[0].value }) ; // Use email prefix as username
 
       if (user) {
         // Link the Google ID to the existing user
-        user.googleId = profile.id;
-        await user.save();
+        user = await User.findOneAndUpdate(
+          { email: profile.emails[0].value },
+          { $set: { googleId: profile.id } },
+          { new: true }
+        );
       } else {
         // Generate a username
         const baseUsername = profile.emails[0].value.split('@')[0];
