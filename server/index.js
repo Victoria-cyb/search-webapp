@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const { ApolloServer } = require('apollo-server-express');
 const cors = require('cors');
@@ -14,7 +15,7 @@ const connectDB = require('./config/db');
 const User = require('./models/User');
 const Download = require('./models/Download');
 const axios = require('axios');
-require('dotenv').config();
+
 
 
 const app = express();
@@ -79,6 +80,7 @@ app.use('/auth/google',
 app.use('/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/login' }),
   function (req, res) {
+    console.log('Logged-in user:', req.user);
     try {
       const token = createJwtToken(req.user); // ✅ Uses the function defined above
       res.redirect(`http://127.0.0.1:5500/search.html?token=${token}`);
