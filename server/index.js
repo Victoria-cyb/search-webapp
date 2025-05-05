@@ -54,6 +54,8 @@ async (accessToken, refreshToken, profile, done) => {
     console.log('Google profile:', profile);
     let user = await User.findOne({ googleId: profile.id });
     if (!user) {
+      const username = profile.emails[0].value.split('@')[0]; // Use email prefix as username
+      
       user = await User.create({
         googleId: profile.id,
         email: profile.emails[0].value,
