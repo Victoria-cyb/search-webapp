@@ -112,7 +112,7 @@ app.get('/auth/google/callback',
 
       
 
-      res.redirect(`https://search-webapp.onrender.com/client/search.html?token=${token}`);
+      res.redirect(`https://search-webapp-ten.vercel.app/search.html?token=${token}`);
     } catch (err) {
       console.error('JWT creation or redirect error:', err);
       res.status(500).send('Internal Server Error during redirect');
