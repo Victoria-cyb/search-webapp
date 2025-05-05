@@ -130,46 +130,60 @@
             }
         });
 
-        // Handle Google registration
-        googleSignInButton.addEventListener('click', () => {
-            // Check if running via file://
-            if (window.location.protocol === 'file:') {
-                console.error('Google Sign-In not supported via file://. Serve files via http://localhost (e.g., VS Code Live Server on port 5500).');
-                errorMessage.textContent = 'Google Sign-In requires a web server. Please use a server like VS Code Live Server.';
-                return;
-            }
+        // // Handle Google registration
+        // googleSignInButton.addEventListener('click', () => {
+        //     // Check if running via file://
+        //     if (window.location.protocol === 'file:') {
+        //         console.error('Google Sign-In not supported via file://. Serve files via http://localhost (e.g., VS Code Live Server on port 5500).');
+        //         errorMessage.textContent = 'Google Sign-In requires a web server. Please use a server like VS Code Live Server.';
+        //         return;
+        //     }
 
-            function promptGoogleSignIn(attempt = 1, maxAttempts = 30) {
-                if (attempt > maxAttempts) {
-                    console.error('Failed to show Google Sign-In prompt after', maxAttempts, 'attempts.');
-                    errorMessage.textContent = 'Unable to show Google Sign-In prompt. Please try again later.';
-                    return;
-                }
-                if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
-                    try {
-                        google.accounts.id.prompt((notification) => {
-                            if (notification.isNotDisplayed()) {
-                                console.error('Google Sign-In prompt not displayed:', notification.getNotDisplayedReason());
-                                errorMessage.textContent = `Google Sign-In failed: ${notification.getNotDisplayedReason()}`;
-                            } else if (notification.isSkippedMoment()) {
-                                console.warn('Google Sign-In prompt skipped:', notification.getSkippedReason());
-                                errorMessage.textContent = `Google Sign-In skipped: ${notification.getSkippedReason()}`;
-                            } else if (notification.isDismissedMoment()) {
-                                console.log('Google Sign-In prompt dismissed:', notification.getDismissedReason());
-                            }
-                        });
-                        console.log('Google Sign-In prompt triggered on attempt', attempt);
-                    } catch (error) {
-                        console.error('Google Sign-In prompt error on attempt', attempt, ':', error.message);
-                        setTimeout(() => promptGoogleSignIn(attempt + 1, maxAttempts), 100);
-                    }
-                } else {
-                    console.log('Google script not loaded yet, retrying attempt', attempt, 'of', maxAttempts);
-                    setTimeout(() => promptGoogleSignIn(attempt + 1, maxAttempts), 100);
-                }
-            }
-            promptGoogleSignIn();
-        });
+        //     function promptGoogleSignIn(attempt = 1, maxAttempts = 30) {
+        //         if (attempt > maxAttempts) {
+        //             console.error('Failed to show Google Sign-In prompt after', maxAttempts, 'attempts.');
+        //             errorMessage.textContent = 'Unable to show Google Sign-In prompt. Please try again later.';
+        //             return;
+        //         }
+        //         if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+        //             try {
+        //                 google.accounts.id.prompt((notification) => {
+        //                     if (notification.isNotDisplayed()) {
+        //                         console.error('Google Sign-In prompt not displayed:', notification.getNotDisplayedReason());
+        //                         errorMessage.textContent = `Google Sign-In failed: ${notification.getNotDisplayedReason()}`;
+        //                     } else if (notification.isSkippedMoment()) {
+        //                         console.warn('Google Sign-In prompt skipped:', notification.getSkippedReason());
+        //                         errorMessage.textContent = `Google Sign-In skipped: ${notification.getSkippedReason()}`;
+        //                     } else if (notification.isDismissedMoment()) {
+        //                         console.log('Google Sign-In prompt dismissed:', notification.getDismissedReason());
+        //                     }
+        //                 });
+        //                 console.log('Google Sign-In prompt triggered on attempt', attempt);
+        //             } catch (error) {
+        //                 console.error('Google Sign-In prompt error on attempt', attempt, ':', error.message);
+        //                 setTimeout(() => promptGoogleSignIn(attempt + 1, maxAttempts), 100);
+        //             }
+        //         } else {
+        //             console.log('Google script not loaded yet, retrying attempt', attempt, 'of', maxAttempts);
+        //             setTimeout(() => promptGoogleSignIn(attempt + 1, maxAttempts), 100);
+        //         }
+        //     }
+        //     promptGoogleSignIn();
+        // });
+        document.addEventListener('DOMContentLoaded', () => {
+         const googleSignInButton = document.getElementById('google-signin-button');
+         const errorMessage = document.getElementById('error-message');
+
+        googleSignInButton.addEventListener('click', () => {
+      // Redirect to backend OAuth 
+      if (window.location.protocol === 'file:') {
+        errorMessage.textContent = 'Please use a local server like Live Server. Google Sign-In won’t work with file://';
+        return;
+      }
+      window.location.href = 'https://search-webapp.onrender.com/auth/google';  // Adjust if deployed
+    });
+  });
+
 
         document.getElementById('logout-link').addEventListener('click', () => {
             localStorage.removeItem('token');

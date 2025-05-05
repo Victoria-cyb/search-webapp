@@ -1055,6 +1055,41 @@ footer a {
       padding: 5px 10px;
       font-size: 12px;
   }
+
+  .google-signin-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+    max-width: 260px;
+}
+
+.google-logo {
+    width: 18px;
+    height: 18px;
+}
+.hamburger {
+  margin-left: 18rem;
+}
+
+main.login, main.register {
+  max-width: 380px;
+}
+
+#search-input {
+  margin-left: 10px;
+  max-width: 400px;
+
+}
+
+#search-button, #clear-search {
+  padding: 5px 20px;
+  font-size: 15px;
+  margin-left: 5px;
+  
+}
+
+
+
+
 }
 
 /* Responsive Design */
@@ -1139,15 +1174,3 @@ body.dark-mode .google-signin-btn:hover {
     }
 }
 
-@media screen and (max-width: 480px) {
-    .google-signin-btn {
-        padding: 6px 12px;
-        font-size: 13px;
-        max-width: 260px;
-    }
-
-    .google-logo {
-        width: 18px;
-        height: 18px;
-    }
-}

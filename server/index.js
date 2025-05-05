@@ -1,6 +1,9 @@
 const express = require('express');
 const { ApolloServer } = require('apollo-server-express');
 const cors = require('cors');
+const passport = require('passport');
+const session = require('express-session');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const typeDefs = require('./schemas/typeDefs');
 const authResolvers = require('./resolvers/auth');
 const imageResolvers = require('./resolvers/image');
@@ -11,11 +14,57 @@ const User = require('./models/User');
 const Download = require('./models/Download');
 const axios = require('axios');
 require('dotenv').config();
-console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
+
 
 const app = express();
 
-app.use(cors({ origin: 'http://127.0.0.1:5500' }))
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'myDefaultSessionSecret',
+  resave: false,
+  saveUninitialized: true,
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((obj, done) => done(null, obj));
+
+passport.use(new GoogleStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: 'https://search-webapp.onrender.com/auth/google/callback',
+}, 
+async (accessToken, refreshToken, profile, done) => {
+  console.log('Google profile:', profile);
+  let user = await User.findOne({ googleId: profile.id });
+  if (!user) {
+    user = await User.create({
+      googleId: profile.id,
+      email: profile.emails[0].value,
+      name: profile.displayName,
+    });
+  }
+
+  return done(null, user);
+}));
+
+app.use(cors({ origin: 'http://127.0.0.1:5500', credentials: true }));
+
+app.use('/auth/google', 
+  passport.authenticate('google', { scope: ['profile', 'email'] })
+);
+
+app.use('/auth/google/callback',
+  passport.authenticate('google', { failureRedirect: '/' }),
+  function (req, res) {
+    
+
+     // Option 2: use JWT and pass token via query param
+     const token = createJwtToken(req.user);
+     res.redirect(`http://127.0.0.1:5500/search.html?token=${token}`);
+  }
+);
 
 const resolvers = {
   Query: {

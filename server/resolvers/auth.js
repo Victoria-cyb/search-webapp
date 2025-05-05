@@ -43,70 +43,70 @@ const auth = {
             return { token, user };
           },
 
-          googleRegister: async (_, { googleToken }, { User }) => {
-            try {
-              console.log('googleRegister: Verifying token, GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
-              const ticket = await client.verifyIdToken({
-                idToken: googleToken,
-                audience: process.env.GOOGLE_CLIENT_ID,
-              });
-              const payload = ticket.getPayload();
-              console.log('googleRegister: Token payload:', payload);
-              const { email, name } = payload;
+    //       googleRegister: async (_, { googleToken }, { User }) => {
+    //         try {
+    //           console.log('googleRegister: Verifying token, GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
+    //           const ticket = await client.verifyIdToken({
+    //             idToken: googleToken,
+    //             audience: process.env.GOOGLE_CLIENT_ID,
+    //           });
+    //           const payload = ticket.getPayload();
+    //           console.log('googleRegister: Token payload:', payload);
+    //           const { email, name } = payload;
       
-              let user = await User.findOne({ email });
-              if (user) {
-                throw new UserInputError('User already exists. Please log in.');
-              }
+    //           let user = await User.findOne({ email });
+    //           if (user) {
+    //             throw new UserInputError('User already exists. Please log in.');
+    //           }
 
-              const username = name.replace(/\s/g, '').toLowerCase().slice(0, 20);
-        let uniqueUsername = username;
-        let counter = 1;
-        while (await User.findOne({ username: uniqueUsername })) {
-          uniqueUsername = `${username}${counter}`;
-          counter++;
-        }
+    //           const username = name.replace(/\s/g, '').toLowerCase().slice(0, 20);
+    //     let uniqueUsername = username;
+    //     let counter = 1;
+    //     while (await User.findOne({ username: uniqueUsername })) {
+    //       uniqueUsername = `${username}${counter}`;
+    //       counter++;
+    //     }
 
-        user = new User({
-          username: uniqueUsername,
-          email,
-          password: '', // No password for Google users
-        });
-        await user.save();
+    //     user = new User({
+    //       username: uniqueUsername,
+    //       email,
+    //       password: '', // No password for Google users
+    //     });
+    //     await user.save();
 
-        const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        console.log('googleRegister: User created, token:', token);
-        return { token, user };
-      } catch (error) {
-        console.error('googleRegister: Error:', error.message, 'Stack:', error.stack);
-        throw new AuthenticationError(error.message || 'Google registration failed');
-      }
-    },
+    //     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    //     console.log('googleRegister: User created, token:', token);
+    //     return { token, user };
+    //   } catch (error) {
+    //     console.error('googleRegister: Error:', error.message, 'Stack:', error.stack);
+    //     throw new AuthenticationError(error.message || 'Google registration failed');
+    //   }
+    // },
 
-    googleLogin: async (_, { googleToken }, { User }) => {
-        try {
-          console.log('googleLogin: Verifying token, GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
-          const ticket = await client.verifyIdToken({
-            idToken: googleToken,
-            audience: process.env.GOOGLE_CLIENT_ID,
-          });
-          const payload = ticket.getPayload();
-          console.log('googleLogin: Token payload:', payload);
-          const { email } = payload;
+    // googleLogin: async (_, { googleToken }, { User }) => {
+    //     try {
+    //       console.log('googleLogin: Verifying token, GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
+    //       const ticket = await client.verifyIdToken({
+    //         idToken: googleToken,
+    //         audience: process.env.GOOGLE_CLIENT_ID,
+    //       });
+    //       const payload = ticket.getPayload();
+    //       console.log('googleLogin: Token payload:', payload);
+    //       const { email } = payload;
   
-          const user = await User.findOne({ email });
-          if (!user) {
-            throw new AuthenticationError('User not found. Please register.');
-          }
+    //       const user = await User.findOne({ email });
+    //       if (!user) {
+    //         throw new AuthenticationError('User not found. Please register.');
+    //       }
   
-          const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-          console.log('googleLogin: User found, token:', token);
-          return { token, user };
-        } catch (error) {
-          console.error('googleLogin: Error:', error.message, 'Stack:', error.stack);
-          throw new AuthenticationError(error.message || 'Google login failed');
-        }
-      },
+    //       const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    //       console.log('googleLogin: User found, token:', token);
+    //       return { token, user };
+    //     } catch (error) {
+    //       console.error('googleLogin: Error:', error.message, 'Stack:', error.stack);
+    //       throw new AuthenticationError(error.message || 'Google login failed');
+    //     }
+    //   },
     },
 };
 

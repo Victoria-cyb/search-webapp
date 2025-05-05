@@ -97,53 +97,63 @@ if (formEl && inputEl && searchResults && showMore) {
     }
 
     // Google OAuth
-    window.handleGoogleCredentialResponse = async (response) => {
-        console.log('script.js: Handling Google credential response');
-        const googleToken = response.credential;
-        let query = `
-            mutation {
-                googleLogin(googleToken: "${googleToken}") {
-                    token
-                    user { id email username }
-                }
-            }`;
-        try {
-            let res = await fetch(GRAPHQL_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query }),
-            });
-            let { data, errors } = await res.json();
-            if (errors && errors[0].message.includes('User not found')) {
-                query = `
-                    mutation {
-                        googleRegister(googleToken: "${googleToken}") {
-                            token
-                            user { id email username }
-                        }
-                    }`;
-                res = await fetch(GRAPHQL_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query }),
-                });
-                ({ data, errors } = await res.json());
-            }
-            if (errors) throw new Error(errors[0].message);
-            if (data.googleLogin || data.googleRegister) {
-                token = data.googleLogin?.token || data.googleRegister?.token;
-                localStorage.setItem('token', token);
-                filtersSection?.classList.add('active');
-                displayFavorites();
-                displayDownloadHistory();
-                showNotification(data.googleLogin ? 'Logged in with Google!' : 'Registered with Google!', false, 'success');
-                window.location.href = 'search.html';
-            }
-        } catch (error) {
-            console.error('Google auth error:', error.message);
-            showNotification('Failed to authenticate with Google: ' + error.message, false, 'error');
-        }
-    };
+    // window.handleGoogleCredentialResponse = async (response) => {
+    //     console.log('script.js: Handling Google credential response');
+    //     const googleToken = response.credential;
+    //     let query = `
+    //         mutation {
+    //             googleLogin(googleToken: "${googleToken}") {
+    //                 token
+    //                 user { id email username }
+    //             }
+    //         }`;
+    //     try {
+    //         let res = await fetch(GRAPHQL_URL, {
+    //             method: 'POST',
+    //             headers: { 'Content-Type': 'application/json' },
+    //             body: JSON.stringify({ query }),
+    //         });
+    //         let { data, errors } = await res.json();
+    //         if (errors && errors[0].message.includes('User not found')) {
+    //             query = `
+    //                 mutation {
+    //                     googleRegister(googleToken: "${googleToken}") {
+    //                         token
+    //                         user { id email username }
+    //                     }
+    //                 }`;
+    //             res = await fetch(GRAPHQL_URL, {
+    //                 method: 'POST',
+    //                 headers: { 'Content-Type': 'application/json' },
+    //                 body: JSON.stringify({ query }),
+    //             });
+    //             ({ data, errors } = await res.json());
+    //         }
+    //         if (errors) throw new Error(errors[0].message);
+    //         if (data.googleLogin || data.googleRegister) {
+    //             token = data.googleLogin?.token || data.googleRegister?.token;
+    //             localStorage.setItem('token', token);
+    //             filtersSection?.classList.add('active');
+    //             displayFavorites();
+    //             displayDownloadHistory();
+    //             showNotification(data.googleLogin ? 'Logged in with Google!' : 'Registered with Google!', false, 'success');
+    //             window.location.href = 'search.html';
+    //         }
+    //     } catch (error) {
+    //         console.error('Google auth error:', error.message);
+    //         showNotification('Failed to authenticate with Google: ' + error.message, false, 'error');
+    //     }
+    // };
+
+    // Store token from URL if coming from Google OAuth
+const urlParamsForToken = new URLSearchParams(window.location.search);
+const urlToken = urlParamsForToken.get('token');
+if (urlToken) {
+    localStorage.setItem('token', urlToken);
+    // Optional: clean up the URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+}
+
 
     window.showNotification = function(message, showRegister = true, type = 'info') {
         console.log('showNotification called:', { message, showRegister, type });
