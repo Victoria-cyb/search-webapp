@@ -48,20 +48,33 @@ passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   callbackURL: 'https://search-webapp.onrender.com/auth/google/callback',
-}, 
-async (accessToken, refreshToken, profile, done) => {
+},
+
+ async (accessToken, refreshToken, profile, done) => {
+
   try {
     console.log('Google profile:', profile);
     let user = await User.findOne({ googleId: profile.id });
     if (!user) {
-      const username = profile.emails[0].value.split('@')[0]; // Use email prefix as username
-      
-      user = await User.create({
-        googleId: profile.id,
-        email: profile.emails[0].value,
-        name: profile.displayName,
-        username,
-      });
+      const user = profile.emails[0].value.split('@')[0]; // Use email prefix as username
+
+      if (user) {
+        // Link the Google ID to the existing user
+        user.googleId = profile.id;
+        await user.save();
+      } else {
+        // Generate a username
+        const baseUsername = profile.emails[0].value.split('@')[0];
+        const uniqueSuffix = Date.now().toString().slice(-4);
+        const username = `${baseUsername}_${uniqueSuffix}`;
+
+        user = await User.create({
+          googleId: profile.id,
+          email: profile.emails[0].value,
+          name: profile.displayName,
+          username,
+        });
+      }
     }
     done(null, user);
   } catch (err) {
