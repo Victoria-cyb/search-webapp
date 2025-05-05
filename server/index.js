@@ -92,11 +92,11 @@ passport.use(new GoogleStrategy({
 
 app.use(cors({ origin: 'http://127.0.0.1:5500', credentials: true }));
 
-app.use('/auth/google', 
+app.get('/auth/google', 
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
-app.use('/auth/google/callback',
+app.get('/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/login' }),
   function (req, res) {
     console.log('Callback route hit');
@@ -110,7 +110,9 @@ app.use('/auth/google/callback',
       const token = createJwtToken(req.user); //  Uses the function defined above
       console.log('Token generated:', token);
 
-      res.redirect(`http://127.0.0.1:5500/client/search.html?token=${token}`);
+      const CLIENT_REDIRECT_URL = process.env.CLIENT_REDIRECT_URL || 'http://127.0.0.1:5500';
+
+      res.redirect(`${CLIENT_REDIRECT_URL}/client/search.html?token=${token}`);
     } catch (err) {
       console.error('JWT creation or redirect error:', err);
       res.status(500).send('Internal Server Error during redirect');
