@@ -36,17 +36,25 @@ passport.use(new GoogleStrategy({
   callbackURL: 'https://search-webapp.onrender.com/auth/google/callback',
 }, 
 async (accessToken, refreshToken, profile, done) => {
-  console.log('Google profile:', profile);
-  let user = await User.findOne({ googleId: profile.id });
-  if (!user) {
-    user = await User.create({
-      googleId: profile.id,
-      email: profile.emails[0].value,
-      name: profile.displayName,
-    });
+  try {
+    console.log('Google profile:', profile);
+    let user = await User.findOne({ googleId: profile.id });
+    if (!user) {
+      user = await User.create({
+        googleId: profile.id,
+        email: profile.emails[0].value,
+        name: profile.displayName,
+      });
+    }
+    done(null, user);
+  } catch (err) {
+    console.error('OAuth callback error:', err); // Log the actual error
+    done(err);
   }
+  
+  
 
-  return done(null, user);
+  
 }));
 
 app.use(cors({ origin: 'http://127.0.0.1:5500', credentials: true }));
@@ -56,7 +64,7 @@ app.use('/auth/google',
 );
 
 app.use('/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/' }),
+  passport.authenticate('google', { failureRedirect: '/login' }),
   function (req, res) {
     
 
