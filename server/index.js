@@ -90,7 +90,7 @@ passport.use(new GoogleStrategy({
   
 }));
 
-app.use(cors({ origin: 'http://127.0.0.1:5500', credentials: true }));
+app.use(cors({ origin: '*', credentials: true })); // Allow all origins for CORS
 
 app.get('/auth/google', 
   passport.authenticate('google', { scope: ['profile', 'email'] })
@@ -110,9 +110,9 @@ app.get('/auth/google/callback',
       const token = createJwtToken(req.user); //  Uses the function defined above
       console.log('Token generated:', token);
 
-      const CLIENT_REDIRECT_URL = process.env.CLIENT_REDIRECT_URL || 'http://127.0.0.1:5500';
+      
 
-      res.redirect(`${CLIENT_REDIRECT_URL}/client/search.html?token=${token}`);
+      res.redirect(`https://search-webapp.onrender.com/client/search.html?token=${token}`);
     } catch (err) {
       console.error('JWT creation or redirect error:', err);
       res.status(500).send('Internal Server Error during redirect');
