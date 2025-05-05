@@ -80,9 +80,17 @@ app.use('/auth/google',
 app.use('/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/login' }),
   function (req, res) {
+    console.log('Callback route hit');
     console.log('Logged-in user:', req.user);
     try {
-      const token = createJwtToken(req.user); // ✅ Uses the function defined above
+      if (!req.user) {
+        console.error('No user in request');
+        return res.status(500).send('Internal Error: No user');
+      }
+
+      const token = createJwtToken(req.user); //  Uses the function defined above
+      console.log('Token generated:', token);
+
       res.redirect(`http://127.0.0.1:5500/search.html?token=${token}`);
     } catch (err) {
       console.error('JWT creation or redirect error:', err);
