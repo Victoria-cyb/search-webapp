@@ -91,7 +91,7 @@ app.use('/auth/google/callback',
       const token = createJwtToken(req.user); //  Uses the function defined above
       console.log('Token generated:', token);
 
-      res.redirect(`http://127.0.0.1:5500/client/search.html?token=${token}`);
+      res.redirect(`https://search-webapp.onrender.com/client/search.html?token=${token}`);
     } catch (err) {
       console.error('JWT creation or redirect error:', err);
       res.status(500).send('Internal Server Error during redirect');
