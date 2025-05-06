@@ -146,6 +146,7 @@ const image = {
             }
             return Download.find({ userId: user.userId });
         },
+       
 
         getUserProfile: async (_, __, { user, User }) => {
             if (!user) {
@@ -157,6 +158,7 @@ const image = {
             }
             return currentUser;
         },
+       
     },
 
     Mutation: {
@@ -201,6 +203,32 @@ const image = {
             const result = await Download.create(download);
             return result;
         },
+
+        updateUserProfile: async (_, { username, email }, { user, User }) => {
+            if (!user) {
+              throw new AuthenticationError("You must be logged in to update profile");
+            }
+        
+            const currentUser = await User.findById(user.userId);
+            if (!currentUser) {
+              throw new Error("User not found");
+            }
+        
+            if (username) currentUser.username = username;
+            if (email) currentUser.email = email;
+        
+            await currentUser.save();
+            return currentUser;
+          },
+
+        clearDownloadHistory: async (_, __, { user, Download }) => {
+            if (!user) {
+              throw new AuthenticationError("You must be logged in to clear download history");
+            }
+        
+            await Download.deleteMany({ userId: user.userId });
+            return true;
+          },
     },
 };
 

@@ -52,6 +52,8 @@ googleRegister(googleToken: String!): AuthPayload!
 addFavorite(image: ImageInput!): FavoritePayload!
 removeFavorite(imageId: ID!): FavoritePayload!
 trackDownload(imageId: ID!, url: String!, alt_description: String): Download!
+updateUserProfile(username: String, email: String): User!
+clearDownloadHistory: [Download!]!
 }
 
 type SearchResult {

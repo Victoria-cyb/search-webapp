@@ -605,9 +605,32 @@ if (urlToken) {
             });
             const clearBtn = document.createElement('button');
             clearBtn.textContent = 'Clear History';
-            clearBtn.addEventListener('click', () => {
-                localStorage.removeItem('downloadHistory');
-                displayDownloadHistory();
+            clearBtn.addEventListener('click', async () => {
+                try {
+                    const mutation = `
+                        mutation {
+                            clearDownloadHistory
+                        }`;
+                    const res = await fetch(GRAPHQL_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify({ query: mutation }),
+                    });
+                    const { data, errors } = await res.json();
+                    if (errors) {
+                        throw new Error(errors[0].message);
+                    }
+                    if (data.clearDownloadHistory) {
+                        alert('Download history cleared.');
+                        displayDownloadHistory(); // Refresh list
+                    }
+                } catch (err) {
+                    console.error('Error clearing history:', err.message);
+                    alert('Failed to clear download history: ' + err.message);
+                }
             });
             downloadHistorySection.appendChild(clearBtn);
         } catch (error) {
@@ -669,6 +692,8 @@ if (urlToken) {
         searchImages();
     }
 }
+
+
 
 const logoutLink = document.getElementById('logout-link');
 if (logoutLink) {
