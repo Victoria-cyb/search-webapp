@@ -606,7 +606,7 @@ if (urlToken) {
                     const mutation = `
                         mutation {
                             clearDownloadHistory {
-                                success
+                                id url alt_description timestamp
                             }
                         }`;
                     const res = await fetch(GRAPHQL_URL, {
