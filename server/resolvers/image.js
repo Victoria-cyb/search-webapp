@@ -227,7 +227,7 @@ const image = {
             }
         
             await Download.deleteMany({ userId: user.userId });
-            return true;
+            return [];
           },
     },
 };

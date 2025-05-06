@@ -623,7 +623,7 @@ if (urlToken) {
                     }
                     if (data.clearDownloadHistory) {
                         alert('Download history cleared.');
-                        displayDownloadHistory(); 
+                        displayDownloadHistory([]); 
                 
                         
                     } else {
