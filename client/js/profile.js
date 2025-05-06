@@ -146,7 +146,7 @@ if (profileForm) {
         }
 
         const mutation = `
-            mutation { updateProfile(username: "${username}", email: "${email}") {
+            mutation { updateUserProfile(username: "${username}", email: "${email}") {
                 id username email
             } }
         `;
@@ -161,13 +161,13 @@ if (profileForm) {
             });
             const { data, errors } = await res.json();
             if (errors) {
-                console.error('updateProfile errors:', JSON.stringify(errors, null, 2));
+                console.error('updateUserProfile errors:', JSON.stringify(errors, null, 2));
                 throw new Error(errors[0].message);
             }
             profileError.textContent = 'Profile updated successfully!';
             await loadProfile();
         } catch (error) {
-            console.error('updateProfile failed:', error.message);
+            console.error('updateUserProfile failed:', error.message);
             profileError.textContent = `Failed to update profile: ${error.message}`;
         }
     });

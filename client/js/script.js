@@ -588,11 +588,7 @@ if (urlToken) {
                 throw new Error(errors[0].message);
             }
             const history = data.getDownloadHistory;
-            downloadHistorySection.innerHTML = '<h3>Download History</h3>';
-            if (!history || history.length === 0) {
-                downloadHistorySection.innerHTML += '<p>No downloads yet.</p>';
-                return;
-            }
+           
             downloadHistorySection.innerHTML = '<h3>Download History</h3>';
             history.forEach(item => {
                 const wrapper = document.createElement('div');
@@ -636,6 +632,13 @@ if (urlToken) {
         } catch (error) {
             console.error('Error fetching download history:', error.message);
             downloadHistorySection.innerHTML = '<p>Failed to load download history: ' + error.message + '</p>';
+        }
+        downloadHistorySection.appendChild(clearBtn); // Append the clear button to the section
+        // Check if history is empty and display a message if so
+    
+        if (!history || history.length === 0) {
+            downloadHistorySection.innerHTML += '<p>No downloads yet.</p>';
+            return;
         }
     }
 
