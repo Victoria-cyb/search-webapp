@@ -633,13 +633,6 @@ if (urlToken) {
             console.error('Error fetching download history:', error.message);
             downloadHistorySection.innerHTML = '<p>Failed to load download history: ' + error.message + '</p>';
         }
-        downloadHistorySection.appendChild(clearBtn); // Append the clear button to the section
-        // Check if history is empty and display a message if so
-    
-        if (!history || history.length === 0) {
-            downloadHistorySection.innerHTML += '<p>No downloads yet.</p>';
-            return;
-        }
     }
 
     const filterEls = document.querySelectorAll('.filters select');

@@ -22,6 +22,9 @@ const profileError = document.getElementById('error-message');
 const favoritesDiv = document.querySelector('.favorites');
 const downloadHistoryDiv = document.querySelector('.download-history');
 
+console.log('downloadHistoryDiv:', downloadHistoryDiv);
+console.log('Download History Data:', data.getDownloadHistory);
+
 async function loadProfile() {
     const query = `
         query {
