@@ -606,8 +606,8 @@ if (urlToken) {
                     const mutation = `
                         mutation {
                             clearDownloadHistory {
-                                id 
-                                url
+                                success
+                                message
                             }
                         }`;
                     const res = await fetch(GRAPHQL_URL, {
@@ -624,13 +624,18 @@ if (urlToken) {
                     }
                     if (data.clearDownloadHistory) {
                         alert('Download history cleared.');
-                        displayDownloadHistory(); // Refresh list
+                        displayDownloadHistory(); 
+                        await loadProfile(); // Refresh profile data
+                        
+                    } else {
+                        alert('Sever did not confirm deletion.');
                     }
                 } catch (err) {
                     console.error('Error clearing history:', err.message);
                     alert('Failed to clear download history: ' + err.message);
                 }
             });
+            
             downloadHistorySection.appendChild(clearBtn);
         } catch (error) {
             console.error('Error fetching download history:', error.message);
