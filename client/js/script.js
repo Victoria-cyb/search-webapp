@@ -587,9 +587,16 @@ if (urlToken) {
                 console.error('displayDownloadHistory errors:', JSON.stringify(errors, null, 2));
                 throw new Error(errors[0].message);
             }
+
+
             const history = data.getDownloadHistory;
            
             downloadHistorySection.innerHTML = '<h3>Download History</h3>';
+            if (!history || history.length === 0) {
+                downloadHistorySection.innerHTML += '<p>No downloads yet.</p>';
+                return;
+            }
+            
             history.forEach(item => {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'search-result';
