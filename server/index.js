@@ -23,7 +23,7 @@ const app = express();
 function createJwtToken(user) {
   return jwt.sign(
     {
-      id: user._id,
+      userId: user._id,
       email: user.email,
       name: user.name,
     },
