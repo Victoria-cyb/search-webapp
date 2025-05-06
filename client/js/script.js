@@ -607,7 +607,6 @@ if (urlToken) {
                         mutation {
                             clearDownloadHistory {
                                 success
-                                message
                             }
                         }`;
                     const res = await fetch(GRAPHQL_URL, {
@@ -625,7 +624,7 @@ if (urlToken) {
                     if (data.clearDownloadHistory) {
                         alert('Download history cleared.');
                         displayDownloadHistory(); 
-                        await loadProfile(); // Refresh profile data
+                
                         
                     } else {
                         alert('Sever did not confirm deletion.');
@@ -635,7 +634,7 @@ if (urlToken) {
                     alert('Failed to clear download history: ' + err.message);
                 }
             });
-            
+
             downloadHistorySection.appendChild(clearBtn);
         } catch (error) {
             console.error('Error fetching download history:', error.message);
