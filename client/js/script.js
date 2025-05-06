@@ -605,7 +605,10 @@ if (urlToken) {
                 try {
                     const mutation = `
                         mutation {
-                            clearDownloadHistory
+                            clearDownloadHistory {
+                                id 
+                                url
+                            }
                         }`;
                     const res = await fetch(GRAPHQL_URL, {
                         method: 'POST',
