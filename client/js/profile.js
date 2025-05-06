@@ -23,7 +23,7 @@ const favoritesDiv = document.querySelector('.favorites');
 const downloadHistoryDiv = document.querySelector('.download-history');
 
 console.log('downloadHistoryDiv:', downloadHistoryDiv);
-console.log('Download History Data:', data.getDownloadHistory);
+
 
 async function loadProfile() {
     const query = `
@@ -108,10 +108,55 @@ function displayDownloadHistory(history) {
             <img src="${download.url}" alt="${download.alt_description || 'Downloaded image'}" loading="lazy">
             <p>Description: ${download.alt_description || 'N/A'}</p>
             <p>Downloaded: ${new Date(download.timestamp).toLocaleString()}</p>
+            <button id="clearHistoryBtn" data-id="${userId}>Clear History</button>
         `;
         downloadHistoryDiv.appendChild(div);
     });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const clearBtn = document.getElementById('clearHistoryBtn');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', async () => {
+                const confirmClear = confirm('Are you sure you want to clear your download history?');
+                if (!confirmClear) return;
+    
+                const mutation = `
+                    mutation {
+                        clearDownloadHistory {
+                            success
+                            message
+                        }
+                    }
+                `;
+    
+                try {
+                    const res = await fetch(GRAPHQL_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        },
+                        body: JSON.stringify({ query: mutation }),
+                    });
+    
+                    const { data, errors } = await res.json();
+                    if (errors) {
+                        throw new Error(errors[0].message);
+                    }
+    
+                    // Refresh the profile info to clear UI
+                    await loadProfile();
+                } catch (error) {
+                    alert(`Failed to clear history: ${error.message}`);
+                    console.error('clearDownloadHistory failed:', error.message);
+                }
+            });
+        }
+    });
+    
 }
+
+
 
 async function removeFavorite(imageId) {
     const mutation = `
