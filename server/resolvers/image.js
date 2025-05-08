@@ -158,39 +158,39 @@ const image = {
             }
             return currentUser;
         },
+        downloadImage: async (_, { url,  user }) => {
+            if (!user) {
+                throw new AuthenticationError('You must be logged in to download images');
+            }
+            try {
+                console.log('Downloading image from URL:', url);
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        Authorization: `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}`,
+                    },
+                });
+                if (!response.ok) {
+                    console.error('Unsplash error response:', response.status, response.statusText);
+                    throw new Error(`Unsplash API error: ${response.statusText}`);
+                }
+                const buffer = await response.buffer();
+                const base64 = buffer.toString('base64');
+                const contentType = response.headers.get('Content-Type') || 'image/jpeg';
+              
+    
+               
+                return `data:${contentType};base64,${base64}`;
+            } catch (error) {
+                console.error('Download image error:', error.message);
+                throw new Error(`Failed to proxy image: ${error.message}`);
+            
+            }
+        },
        
     },
 
-    downloadImage: async (_, { url }, { user }) => {
-        if (!user) {
-            throw new AuthenticationError('You must be logged in to download images');
-        }
-        try {
-            console.log('Downloading image from URL:', url);
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}`,
-                },
-            });
-            if (!response.ok) {
-                console.error('Unsplash error response:', response.status, response.statusText);
-                throw new Error(`Unsplash API error: ${response.statusText}`);
-            }
-            const buffer = await response.buffer();
-            const contentType = response.headers.get('Content-Type') || 'image/jpeg';
-            const base64 = buffer.toString('base64');
-
-            if (!base64) {
-                console.error('Buffer conversion failed');
-                throw new Error('Failed to convert image to base64');
-            }
-            return `data:${contentType};base64,${base64}`;
-        } catch (error) {
-            console.error('Download image error:', error.message);
-            throw new Error(`Failed to proxy image: ${error.message}`);
-        }
-    },
+   
 
 
     Mutation: {
