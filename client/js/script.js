@@ -368,17 +368,14 @@ if (urlToken) {
                             const base64Data = data.downloadImage;
                         
                             // Convert base64 to Blob
-                            const byteString = atob(base64Data.split(',')[1]);
-                            const mimeString = base64Data.split(',')[0].split(':')[1].split(';')[0];
-                        
-                            const ab = new ArrayBuffer(byteString.length);
-                            const ia = new Uint8Array(ab);
-                            for (let i = 0; i < byteString.length; i++) {
-                                ia[i] = byteString.charCodeAt(i);
-                            }
-                        
-                            const blob = new Blob([ab], { type: mimeString });
-                            downloadUrl = window.URL.createObjectURL(blob);
+                           // Open the image in a new tab (let user manually download)
+                          const newTab = window.open();
+                          newTab.document.write(`<img src="${base64Data}" style="width:100%; height:auto;" alt="Image" />`);
+                         newTab.document.title = "Long press to download";
+    
+                           // Optionally, inform the user
+                          showNotification('Image opened in new tab. Long-press to save it.', false, 'info');
+                         return; // Skip rest of code that creates <a download>
                         }else {
                             // Use fetch to download the image
                             const response = await fetch(result.urls.full, {
