@@ -158,7 +158,7 @@ const image = {
             }
             return currentUser;
         },
-        downloadImage: async (_, { url,  user }) => {
+        downloadImage: async (_, { url }, { user }  ) => {
             if (!user) {
                 throw new AuthenticationError('You must be logged in to download images');
             }
