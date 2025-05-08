@@ -344,27 +344,42 @@ if (urlToken) {
                         let downloadUrl;
                     
                         if (isMobile) {
-                           // Call backend to proxy the download
-            const downloadResponse = await fetch(GRAPHQL_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    query: `
-                        query {
-                            downloadImage(url: "${result.urls.full}")
-                        }
-                    `,
-                }),
-            });
-            const { data, errors } = await downloadResponse.json();
-            if (errors) {
-                throw new Error(errors[0].message);
-            }
-            downloadUrl = data.downloadImage;
-                        } else {
+                            // Call backend to get base64-encoded image
+                            const downloadResponse = await fetch(GRAPHQL_URL, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    Authorization: `Bearer ${token}`,
+                                },
+                                body: JSON.stringify({
+                                    query: `
+                                        query {
+                                            downloadImage(url: "${result.urls.full}")
+                                        }
+                                    `,
+                                }),
+                            });
+                        
+                            const { data, errors } = await downloadResponse.json();
+                            if (errors) {
+                                throw new Error(errors[0].message);
+                            }
+                        
+                            const base64Data = data.downloadImage;
+                        
+                            // Convert base64 to Blob
+                            const byteString = atob(base64Data.split(',')[1]);
+                            const mimeString = base64Data.split(',')[0].split(':')[1].split(';')[0];
+                        
+                            const ab = new ArrayBuffer(byteString.length);
+                            const ia = new Uint8Array(ab);
+                            for (let i = 0; i < byteString.length; i++) {
+                                ia[i] = byteString.charCodeAt(i);
+                            }
+                        
+                            const blob = new Blob([ab], { type: mimeString });
+                            downloadUrl = window.URL.createObjectURL(blob);
+                        }else {
                             // Use fetch to download the image
                             const response = await fetch(result.urls.full, {
                                 method: 'GET',
