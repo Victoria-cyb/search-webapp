@@ -85,7 +85,9 @@
 
 
 
-
+const fs = require('fs');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
 const fetch = require('node-fetch');
 const { AuthenticationError } = require('apollo-server-express');
 
@@ -171,16 +173,24 @@ const image = {
                     },
                 });
                 if (!response.ok) {
-                    console.error('Unsplash error response:', response.status, response.statusText);
+
                     throw new Error(`Unsplash API error: ${response.statusText}`);
                 }
                 const buffer = await response.buffer();
-                const base64 = buffer.toString('base64');
                 const contentType = response.headers.get('Content-Type') || 'image/jpeg';
-              
+                const extension = contentType.split('/')[1];
+                const filename = `${uuidv4()}.${extension}`;
+                const filePath = path.join(__dirname, '..', 'public', 'temp', filename);
+            
+              // Ensure temp folder exists
+               fs.mkdirSync(path.dirname(filePath), { recursive: true });
+
+                  // Save the file
+                   fs.writeFileSync(filePath, buffer);
+
     
                
-                return `data:${contentType};base64,${base64}`;
+                   return `https://your-backend-domain.com/temp/${filename}`;
             } catch (error) {
                 console.error('Download image error:', error.message);
                 throw new Error(`Failed to proxy image: ${error.message}`);

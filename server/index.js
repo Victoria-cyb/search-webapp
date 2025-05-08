@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const path = require('path');
 const { ApolloServer } = require('apollo-server-express');
 const cors = require('cors');
 const passport = require('passport');
@@ -40,6 +41,7 @@ app.use(session({
 
 app.use(passport.initialize());
 app.use(passport.session());
+
 
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((obj, done) => done(null, obj));
@@ -151,5 +153,5 @@ const startServer = async () => {
     console.log(`Server running at http://localhost:${PORT}${server.graphqlPath}`);
   });
 };
-
+app.use('/temp', express.static(path.join(__dirname, 'public', 'temp')));
 startServer();
