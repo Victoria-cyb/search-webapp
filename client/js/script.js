@@ -340,26 +340,31 @@ if (urlToken) {
 
                     showNotification('Download started...', false, 'ongoing');
                     try {
-                        // Fetch the image
-                        const response = await fetch(result.urls.full, {
-                            method: 'GET',
-                            headers: {
-                                // Add any necessary headers for Unsplash API if required
-                            },
-                        });
-                        if (!response.ok) {
-                            throw new Error(`Failed to fetch image: ${response.statusText}`);
+                        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                        if (isMobile) {
+                            window.open(result.urls.full, '_blank');
+                        } else {
+                            // Use fetch to download the image
+                            const response = await fetch(result.urls.full, {
+                                method: 'GET',
+                                headers: {
+                                    // Add any necessary headers for Unsplash API if required
+                                },
+                            });
+                            if (!response.ok) {
+                                throw new Error(`Failed to fetch image: ${response.statusText}`);
+                            }
+                            const blob = await response.blob();
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `${result.id || 'image'}.jpg`;
+                            document.body.appendChild(a);
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+                            document.body.removeChild(a);
                         }
-                        const blob = await response.blob();
-                        const url = window.URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `${result.id || 'image'}.jpg`;
-                        document.body.appendChild(a);
-                        a.click();
-                        window.URL.revokeObjectURL(url);
-                        document.body.removeChild(a);
-
+                       
                         // Track the download via GraphQL mutation
                         const mutation = `
                             mutation { 
