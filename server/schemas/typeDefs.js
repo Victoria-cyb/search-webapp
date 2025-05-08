@@ -42,6 +42,7 @@ searchImages(query: String!, page: Int!, orientation: String, color: String, siz
 getFavorites: [Image!]!
 getDownloadHistory: [Download!]!
 getUserProfile: User!
+downloadImage(url: String!): String!
 }
 
 type Mutation {

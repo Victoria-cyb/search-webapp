@@ -341,8 +341,29 @@ if (urlToken) {
                     showNotification('Download started...', false, 'ongoing');
                     try {
                         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                        let downloadUrl;
+                    
                         if (isMobile) {
-                            window.open(result.urls.full, '_blank');
+                           // Call backend to proxy the download
+            const downloadResponse = await fetch(GRAPHQL_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    query: `
+                        query {
+                            downloadImage(url: "${result.urls.full}")
+                        }
+                    `,
+                }),
+            });
+            const { data, errors } = await downloadResponse.json();
+            if (errors) {
+                throw new Error(errors[0].message);
+            }
+            downloadUrl = data.downloadImage;
                         } else {
                             // Use fetch to download the image
                             const response = await fetch(result.urls.full, {
@@ -355,15 +376,20 @@ if (urlToken) {
                                 throw new Error(`Failed to fetch image: ${response.statusText}`);
                             }
                             const blob = await response.blob();
-                            const url = window.URL.createObjectURL(blob);
+                            downloadurl = window.URL.createObjectURL(blob);
+
+                        }
+                        
                             const a = document.createElement('a');
                             a.href = url;
                             a.download = `${result.id || 'image'}.jpg`;
                             document.body.appendChild(a);
                             a.click();
+                            if (isMobile) {
                             window.URL.revokeObjectURL(url);
+                            }
                             document.body.removeChild(a);
-                        }
+                   
                        
                         // Track the download via GraphQL mutation
                         const mutation = `

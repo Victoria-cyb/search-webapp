@@ -161,6 +161,30 @@ const image = {
        
     },
 
+    downloadImage: async (_, { url }, { user }) => {
+        if (!user) {
+            throw new AuthenticationError('You must be logged in to download images');
+        }
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    Authorization: `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}`,
+                },
+            });
+            if (!response.ok) {
+                throw new Error(`Unsplash API error: ${response.statusText}`);
+            }
+            const buffer = await response.buffer();
+            const contentType = response.headers.get('Content-Type') || 'image/jpeg';
+            const base64 = buffer.toString('base64');
+            return `data:${contentType};base64,${base64}`;
+        } catch (error) {
+            throw new Error(`Failed to proxy image: ${error.message}`);
+        }
+    },
+
+
     Mutation: {
         addFavorite: async (_, { image }, { user, User }) => {
             if (!user) {
