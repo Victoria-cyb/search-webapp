@@ -381,12 +381,12 @@ if (urlToken) {
                         }
                         
                             const a = document.createElement('a');
-                            a.href = url;
+                            a.href = downloadUrl;
                             a.download = `${result.id || 'image'}.jpg`;
                             document.body.appendChild(a);
                             a.click();
                             if (isMobile) {
-                            window.URL.revokeObjectURL(url);
+                            window.URL.revokeObjectURL(downloadUrl);
                             }
                             document.body.removeChild(a);
                    
