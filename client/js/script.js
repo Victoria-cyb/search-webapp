@@ -307,137 +307,142 @@ if (urlToken) {
                 downloadBtn.textContent = 'Download';
                 // downloadBtn.disabled = !token;
                 console.log('searchImages: Creating downloadBtn, disabled:', downloadBtn.disabled, 'token:', token);
-                downloadBtn.addEventListener('click', async (e) => {
-                    e.stopPropagation(); // Prevent click from bubbling to parent elements
-                    e.preventDefault(); // Prevent any default behavior
-                    console.log('Download button clicked, token:', token, 'result:', result.id);
 
-                    if (!token) {
-
-                        showNotification('Please register and log in to download images.', true, 'info');
+              
+                document.addEventListener('DOMContentLoaded', () => {
+                    const downloadBtn = document.getElementById('downloadBtn');
+                    if (!downloadBtn) {
+                        console.warn('Download button not found!');
                         return;
                     }
-
-                    // Validate token before proceeding
-                    try {
-                        const payload = JSON.parse(atob(token.split('.')[1]));
-                        if (payload.exp * 1000 < Date.now()) {
-                            console.log('Token expired during download, clearing');
+                
+                    downloadBtn.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        console.log('Download button clicked, token:', token, 'result:', result.id);
+                
+                        if (!token) {
+                            showNotification('Please register and log in to download images.', true, 'info');
+                            return;
+                        }
+                
+                        try {
+                            const payload = JSON.parse(atob(token.split('.')[1]));
+                            if (payload.exp * 1000 < Date.now()) {
+                                console.log('Token expired during download, clearing');
+                                localStorage.removeItem('token');
+                                token = null;
+                                showNotification('Session expired. Please log in again.', true, 'error');
+                                downloadBtn.disabled = true;
+                                return;
+                            }
+                        } catch (error) {
+                            console.log('Invalid token during download, clearing', error.message);
                             localStorage.removeItem('token');
                             token = null;
-                            showNotification('Session expired. Please log in again.', true, 'error');
+                            showNotification('Invalid session. Please log in again.', true, 'error');
                             downloadBtn.disabled = true;
                             return;
                         }
-                    } catch (error) {
-                        console.log('Invalid token during download, clearing', error.message);
-                        localStorage.removeItem('token');
-                        token = null;
-                        showNotification('Invalid session. Please log in again.', true, 'error');
-                        downloadBtn.disabled = true;
-                        return;
-                    }
-
-                    showNotification('Download started...', false, 'ongoing');
-                    try {
-                        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                        let downloadUrl;
-                    
-                        if (isMobile) {
-                            // Call backend to get base64-encoded image
-                            const downloadResponse = await fetch(GRAPHQL_URL, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    Authorization: `Bearer ${token}`,
-                                },
-                                body: JSON.stringify({
-                                    query: `
-                                        query {
-                                            downloadImage(url: "${result.urls.full}")
-                                        }
-                                    `,
-                                }),
-                            });
-                        
-                            const { data, errors } = await downloadResponse.json();
-                            if (errors) {
-                                throw new Error(errors[0].message);
+                
+                        showNotification('Download started...', false, 'ongoing');
+                
+                        try {
+                            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                            let downloadUrl;
+                
+                            if (isMobile) {
+                                // Call backend to get base64-encoded image
+                                const downloadResponse = await fetch(GRAPHQL_URL, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        Authorization: `Bearer ${token}`,
+                                    },
+                                    body: JSON.stringify({
+                                        query: `
+                                            query {
+                                                downloadImage(url: "${result.urls.full}")
+                                            }
+                                        `,
+                                    }),
+                                });
+                
+                                const { data, errors } = await downloadResponse.json();
+                                if (errors) {
+                                    throw new Error(errors[0].message);
+                                }
+                
+                                const base64Data = data.downloadImage;
+                
+                                // Open the image in a new tab (let user long-press to save it)
+                                const newTab = window.open();
+                                if (!newTab) {
+                                    showNotification('Popup blocked! Please allow popups and try again.', true, 'error');
+                                    return;
+                                }
+                                newTab.document.write(`<img src="${base64Data}" style="width:100%; height:auto;" alt="Image" />`);
+                                newTab.document.title = "Long press to download";
+                
+                                showNotification('Image opened in new tab. Long-press to save it.', false, 'info');
+                                return;
+                            } else {
+                                // Desktop download
+                                const response = await fetch(result.urls.full, {
+                                    method: 'GET',
+                                });
+                                if (!response.ok) {
+                                    throw new Error(`Failed to fetch image: ${response.statusText}`);
+                                }
+                                const blob = await response.blob();
+                                downloadUrl = window.URL.createObjectURL(blob);
                             }
-                        
-                            const base64Data = data.downloadImage;
-                        
-                            // Convert base64 to Blob
-                           // Open the image in a new tab (let user manually download)
-                          const newTab = window.open();
-                          newTab.document.write(`<img src="${base64Data}" style="width:100%; height:auto;" alt="Image" />`);
-                         newTab.document.title = "Long press to download";
-    
-                           // Optionally, inform the user
-                          showNotification('Image opened in new tab. Long-press to save it.', false, 'info');
-                         return; // Skip rest of code that creates <a download>
-                        }else {
-                            // Use fetch to download the image
-                            const response = await fetch(result.urls.full, {
-                                method: 'GET',
-                                headers: {
-                                    // Add any necessary headers for Unsplash API if required
-                                },
-                            });
-                            if (!response.ok) {
-                                throw new Error(`Failed to fetch image: ${response.statusText}`);
-                            }
-                            const blob = await response.blob();
-                            downloadurl = window.URL.createObjectURL(blob);
-
-                        }
-                        
+                
                             const a = document.createElement('a');
                             a.href = downloadUrl;
                             a.download = `${result.id || 'image'}.jpg`;
                             document.body.appendChild(a);
                             a.click();
-                            if (isMobile) {
                             window.URL.revokeObjectURL(downloadUrl);
-                            }
                             document.body.removeChild(a);
-                   
-                       
-                        // Track the download via GraphQL mutation
-                        const mutation = `
-                            mutation { 
-                                trackDownload(
-                                    imageId: "${result.id}", 
-                                    url: "${result.urls.full}", 
-                                    alt_description: "${result.alt_description || ''}"
-                                ) { 
-                                    id 
-                                    url 
-                                    alt_description 
-                                    timestamp 
-                                } 
-                            }`;
-                        const trackResponse = await fetch(GRAPHQL_URL, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                Authorization: `Bearer ${token}`,
-                            },
-                            body: JSON.stringify({ query: mutation }),
-                        });
-                        const { data, errors } = await trackResponse.json();
-                        if (errors) {
-                            console.error('trackDownload errors:', JSON.stringify(errors, null, 2));
-                            throw new Error(errors[0].message);
+                
+                            // Track the download via GraphQL
+                            const mutation = `
+                                mutation { 
+                                    trackDownload(
+                                        imageId: "${result.id}", 
+                                        url: "${result.urls.full}", 
+                                        alt_description: "${result.alt_description || ''}"
+                                    ) { 
+                                        id 
+                                        url 
+                                        alt_description 
+                                        timestamp 
+                                    } 
+                                }`;
+                            const trackResponse = await fetch(GRAPHQL_URL, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    Authorization: `Bearer ${token}`,
+                                },
+                                body: JSON.stringify({ query: mutation }),
+                            });
+                            const { data, errors } = await trackResponse.json();
+                            if (errors) {
+                                console.error('trackDownload errors:', JSON.stringify(errors, null, 2));
+                                throw new Error(errors[0].message);
+                            }
+                
+                            showNotification('Image downloaded successfully!', false, 'success');
+                            displayDownloadHistory();
+                        } catch (error) {
+                            console.error('Download error:', error.message);
+                            showNotification(`Failed to download image: ${error.message}`, false, 'error');
                         }
-
-                        showNotification('Image downloaded successfully!', false, 'success');
-                        displayDownloadHistory(); // Refresh download history
-                    } catch (error) {
-                        console.error('Download error:', error.message);
-                        showNotification(`Failed to download image: ${error.message}`, false, 'error');
-                    }
+                    });
                 });
+                
 
                 const favoriteBtn = document.createElement('button');
                 favoriteBtn.textContent = 'Favorite';
