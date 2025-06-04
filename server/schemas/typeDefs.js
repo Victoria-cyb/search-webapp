@@ -92,6 +92,26 @@ input ImageLinksInput {
   input ImageUserInput {
     name: String!
   }
+    type PinterestImage {
+    id: ID!
+    src: String!
+    alt: String
+    query: String!
+    timestamp: String!
+  }
+
+  type PinterestImageResponse {
+    message: String!
+    images: [PinterestImage!]
+  }
+
+  extend type Query {
+    getPinterestImages(query: String, limit: Int): [PinterestImage!]
+  }
+
+  extend type Mutation {
+    scrapePinterestImages(query: String!, limit: Int): PinterestImageResponse!
+  }
 `;
 
 module.exports = typeDefs;

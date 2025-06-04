@@ -6,18 +6,17 @@ const cors = require('cors');
 const passport = require('passport');
 const session = require('express-session');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const jwt = require ('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 const typeDefs = require('./schemas/typeDefs');
 const authResolvers = require('./resolvers/auth');
 const imageResolvers = require('./resolvers/image');
 const userResolvers = require('./resolvers/user');
+const pinterestResolvers = require('./resolvers/pinterest'); // Add this
 const authMiddleware = require('./middleware/auth');
 const connectDB = require('./config/db');
 const User = require('./models/User');
 const Download = require('./models/Download');
-const axios = require('axios');
-
-
+const PinterestImage = require('./models/pinterestImage'); // Add this
 
 const app = express();
 
@@ -42,7 +41,6 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((obj, done) => done(null, obj));
 
@@ -51,28 +49,21 @@ passport.use(new GoogleStrategy({
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   callbackURL: 'https://search-webapp.onrender.com/auth/google/callback',
 },
-
- async (accessToken, refreshToken, profile, done) => {
-
+async (accessToken, refreshToken, profile, done) => {
   try {
-    console.log('Google profile:', profile);
     let user = await User.findOne({ googleId: profile.id });
     if (!user) {
-      user = await User.findOne({ email: profile.emails[0].value }) ; // Use email prefix as username
-
+      user = await User.findOne({ email: profile.emails[0].value });
       if (user) {
-        // Link the Google ID to the existing user
         user = await User.findOneAndUpdate(
           { email: profile.emails[0].value },
           { $set: { googleId: profile.id } },
           { new: true }
         );
       } else {
-        // Generate a username
         const baseUsername = profile.emails[0].value.split('@')[0];
         const uniqueSuffix = Date.now().toString().slice(-4);
         const username = `${baseUsername}_${uniqueSuffix}`;
-
         user = await User.create({
           googleId: profile.id,
           email: profile.emails[0].value,
@@ -83,37 +74,26 @@ passport.use(new GoogleStrategy({
     }
     done(null, user);
   } catch (err) {
-    console.error('OAuth callback error:', err); // Log the actual error
+    console.error('OAuth callback error:', err);
     done(err);
   }
-  
-  
-
-  
 }));
 
-app.use(cors({ origin: '*', credentials: true })); // Allow all origins for CORS
+app.use(cors({ origin: '*', credentials: true }));
 
-app.get('/auth/google', 
+app.get('/auth/google',
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
 app.get('/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/login' }),
   function (req, res) {
-    console.log('Callback route hit');
-    console.log('Logged-in user:', req.user);
     try {
       if (!req.user) {
         console.error('No user in request');
         return res.status(500).send('Internal Error: No user');
       }
-
-      const token = createJwtToken(req.user); //  Uses the function defined above
-      console.log('Token generated:', token);
-
-      
-
+      const token = createJwtToken(req.user);
       res.redirect(`https://search-webapp-ten.vercel.app/search.html?token=${token}`);
     } catch (err) {
       console.error('JWT creation or redirect error:', err);
@@ -126,11 +106,13 @@ const resolvers = {
   Query: {
     ...imageResolvers.Query,
     ...userResolvers.Query,
+    ...pinterestResolvers.Query, // Add this
   },
   Mutation: {
     ...authResolvers.Mutation,
     ...imageResolvers.Mutation,
     ...userResolvers.Mutation,
+    ...pinterestResolvers.Mutation, // Add this
   },
 };
 
@@ -139,7 +121,7 @@ const server = new ApolloServer({
   resolvers,
   context: ({ req }) => {
     const { user } = authMiddleware({ req });
-    return { user, User, Download };
+    return { user, User, Download, PinterestImage }; // Add PinterestImage to context
   },
 });
 
@@ -148,10 +130,11 @@ const startServer = async () => {
   await server.start();
   server.applyMiddleware({ app });
 
-  const PORT = process.env.PORT || 3000;
+  const PORT = process.env.PORT || 4001;
+  app.use('/temp', express.static(path.join(__dirname, 'public', 'temp')));
   app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}${server.graphqlPath}`);
   });
 };
-app.use('/temp', express.static(path.join(__dirname, 'public', 'temp')));
+
 startServer();

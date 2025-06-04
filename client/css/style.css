@@ -613,6 +613,13 @@ form {
   text-align: center;
 }
 
+#search-source {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
 .search-result button {
   margin: 10px;
   padding: 5px 10px;

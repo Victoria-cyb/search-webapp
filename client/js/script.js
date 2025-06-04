@@ -3,7 +3,6 @@ import { initTheme, updateHistory, initNavigation } from './utils.js';
 document.addEventListener('DOMContentLoaded', () => {
     console.log('script.js: DOM fully loaded for', window.location.pathname);
 
-    // Check if running via file://
     if (window.location.protocol === 'file:') {
         console.error('script.js: Google Sign-In not supported via file://. Serve files via http://localhost (e.g., VS Code Live Server on port 5500).');
         return;
@@ -12,9 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initNavigation();
 
-
-
-    // Initialize Google Sign-In with robust error handling
     function initializeGoogleSignIn(attempt = 1, maxAttempts = 30) {
         if (attempt > maxAttempts) {
             console.error('script.js: Failed to initialize Google Sign-In after', maxAttempts, 'attempts.');
@@ -41,22 +37,20 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeGoogleSignIn();
 });
 
-// Rest of the file remains unchanged
 const formEl = document.querySelector('form');
 const inputEl = document.getElementById('search-input');
+const searchSourceEl = document.getElementById('search-source'); // New
 const searchResults = document.querySelector('.search-results');
 const showMore = document.getElementById('show-more-button');
 const favoritesSection = document.querySelector('.favorites');
 const downloadHistorySection = document.querySelector('.download-history');
 
-// Only initialize search if on search.html
 if (formEl && inputEl && searchResults && showMore) {
     let inputData = '';
     let page = 1;
     let totalPages = 1;
     let token = localStorage.getItem('token') || null;
 
-    // Validate token
     console.log('script.js: Initial token check:', token);
     if (token) {
         try {
@@ -81,10 +75,9 @@ if (formEl && inputEl && searchResults && showMore) {
     };
 
     const GRAPHQL_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? 'http://localhost:3000/graphql'
+        ? 'http://localhost:4001/graphql'
         : 'https://search-webapp.onrender.com/graphql';
 
-    // Initialize filters and history based on login status
     const filtersSection = document.querySelector('.filters');
     if (token) {
         console.log('script.js: User logged in, showing filters');
@@ -96,71 +89,17 @@ if (formEl && inputEl && searchResults && showMore) {
         filtersSection?.classList.remove('active');
     }
 
-    // Google OAuth
-    // window.handleGoogleCredentialResponse = async (response) => {
-    //     console.log('script.js: Handling Google credential response');
-    //     const googleToken = response.credential;
-    //     let query = `
-    //         mutation {
-    //             googleLogin(googleToken: "${googleToken}") {
-    //                 token
-    //                 user { id email username }
-    //             }
-    //         }`;
-    //     try {
-    //         let res = await fetch(GRAPHQL_URL, {
-    //             method: 'POST',
-    //             headers: { 'Content-Type': 'application/json' },
-    //             body: JSON.stringify({ query }),
-    //         });
-    //         let { data, errors } = await res.json();
-    //         if (errors && errors[0].message.includes('User not found')) {
-    //             query = `
-    //                 mutation {
-    //                     googleRegister(googleToken: "${googleToken}") {
-    //                         token
-    //                         user { id email username }
-    //                     }
-    //                 }`;
-    //             res = await fetch(GRAPHQL_URL, {
-    //                 method: 'POST',
-    //                 headers: { 'Content-Type': 'application/json' },
-    //                 body: JSON.stringify({ query }),
-    //             });
-    //             ({ data, errors } = await res.json());
-    //         }
-    //         if (errors) throw new Error(errors[0].message);
-    //         if (data.googleLogin || data.googleRegister) {
-    //             token = data.googleLogin?.token || data.googleRegister?.token;
-    //             localStorage.setItem('token', token);
-    //             filtersSection?.classList.add('active');
-    //             displayFavorites();
-    //             displayDownloadHistory();
-    //             showNotification(data.googleLogin ? 'Logged in with Google!' : 'Registered with Google!', false, 'success');
-    //             window.location.href = 'search.html';
-    //         }
-    //     } catch (error) {
-    //         console.error('Google auth error:', error.message);
-    //         showNotification('Failed to authenticate with Google: ' + error.message, false, 'error');
-    //     }
-    // };
-
-    // Store token from URL if coming from Google OAuth
-const urlParamsForToken = new URLSearchParams(window.location.search);
-const urlToken = urlParamsForToken.get('token');
-if (urlToken) {
-    localStorage.setItem('token', urlToken);
-    // Optional: clean up the URL
-    window.history.replaceState({}, document.title, window.location.pathname);
-}
-
+    const urlParamsForToken = new URLSearchParams(window.location.search);
+    const urlToken = urlParamsForToken.get('token');
+    if (urlToken) {
+        localStorage.setItem('token', urlToken);
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
 
     window.showNotification = function(message, showRegister = true, type = 'info') {
         console.log('showNotification called:', { message, showRegister, type });
         try {
-            // Remove existing modals
             document.querySelectorAll('.notification-modal').forEach(m => m.remove());
-
             const modal = document.createElement('div');
             modal.className = `notification-modal ${type}`;
             modal.innerHTML = `
@@ -171,32 +110,18 @@ if (urlToken) {
                         <button class="close-btn">Close</button>
                     </div>
                 </div>`;
-
-
             document.body.appendChild(modal);
-
-            // Force visibility
-            // modal.style.display = 'flex';
-            // modal.style.visibility = 'visible';
-            // modal.style.zIndex = '1002';
-            // console.log('showNotification: Modal styles:', {
-            //     display: modal.style.display,
-            //     visibility: modal.style.visibility,
-            //     zIndex: modal.style.zIndex
-            // });
-
             modal.style.display = 'flex';
-           modal.style.position = 'fixed';
-          modal.style.top = '20px';
-           modal.style.left = '50%';
-          modal.style.transform = 'translateX(-50%)';
-         modal.style.zIndex = '1002';
-         modal.style.opacity = '1';
-          modal.style.visibility = 'visible';
+            modal.style.position = 'fixed';
+            modal.style.top = '20px';
+            modal.style.left = '50%';
+            modal.style.transform = 'translateX(-50%)';
+            modal.style.zIndex = '1002';
+            modal.style.opacity = '1';
+            modal.style.visibility = 'visible';
 
             const registerBtn = modal.querySelector('.register-btn');
             if (registerBtn) {
-                
                 registerBtn.addEventListener('click', () => {
                     console.log('Register button clicked, navigating to register.html');
                     window.location.href = 'register.html';
@@ -205,36 +130,27 @@ if (urlToken) {
 
             const closeBtn = modal.querySelector('.close-btn');
             if (closeBtn) {
-                
                 closeBtn.addEventListener('click', () => {
                     console.log('Close button clicked');
                     modal.remove();
                 });
             }
 
-             // Auto-remove after 5 seconds, but only if not already removed
-        const autoCloseTimeout = setTimeout(() => {
-            if (modal.isConnected) {
-                console.log('Auto-removing notification');
-                modal.remove();
-            }
-        }, 5000);
-
-        // Clear timeout if modal is manually closed
-        closeBtn?.addEventListener('click', () => {
-            clearTimeout(autoCloseTimeout);
-        });
-
-        // console.log('showNotification: Modal in DOM:', !!document.querySelector('.notification-modal'));
-        }
-         catch (error) {
+            const autoCloseTimeout = setTimeout(() => {
+                if (modal.isConnected) {
+                    console.log('Auto-removing notification');
+                    modal.remove();
+                }
+            }, 5000);
+            closeBtn?.addEventListener('click', () => clearTimeout(autoCloseTimeout));
+        } catch (error) {
             console.error('showNotification error:', error.message);
             alert(message + (showRegister ? ' Please register at register.html.' : ''));
         }
-    }
+    };
 
     async function searchImages(newPage = page) {
-        console.log('searchImages called:', { inputData, page: newPage, filters });
+        console.log('searchImages called:', { inputData, page: newPage, filters, source: searchSourceEl.value });
         try {
             page = newPage;
             inputData = inputEl.value.trim();
@@ -245,28 +161,69 @@ if (urlToken) {
             }
 
             searchResults.innerHTML = '<div class="loading">Loading...</div>';
-            const query = `
-                query {
-                    searchImages(query: "${inputData}", page: ${page}, orientation: "${filters.orientation}", color: "${filters.color}", size: "${filters.size}") {
-                        results { id urls { small regular full } alt_description links { html } user { name } }
-                        total_pages
-                    }
-                }`;
-            const res = await fetch(GRAPHQL_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ query }),
-            });
-            console.log('Fetch response status:', res.status, res.statusText);
-            const { data, errors } = await res.json();
-            console.log('GraphQL response:', { data, errors });
-            if (errors) {
-                console.error('searchImages errors:', JSON.stringify(errors, null, 2));
-                throw new Error(errors[0].message);
+            let query;
+            let results = [];
+            let total_pages = 1;
+
+            if (searchSourceEl.value === 'pinterest') {
+                // Restrict Pinterest search to logged-in users (optional)
+                if (!token) {
+                    showNotification('Please log in to search Pinterest images.', true, 'info');
+                    searchResults.innerHTML = '';
+                    showMore.style.display = 'none';
+                    return;
+                }
+                query = `
+                    mutation {
+                        scrapePinterestImages(query: "${inputData}", limit: 30) {
+                            message
+                            images {
+                                id
+                                src
+                                alt
+                                query
+                                timestamp
+                            }
+                        }
+                    }`;
+                const res = await fetch(GRAPHQL_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ query }),
+                });
+                const { data, errors } = await res.json();
+                if (errors) {
+                    console.error('scrapePinterestImages errors:', JSON.stringify(errors, null, 2));
+                    throw new Error(errors[0].message);
+                }
+                results = data.scrapePinterestImages.images;
+                total_pages = 1; // Pinterest results are limited to 30, no pagination
+            } else {
+                query = `
+                    query {
+                        searchImages(query: "${inputData}", page: ${page}, orientation: "${filters.orientation}", color: "${filters.color}", size: "${filters.size}") {
+                            results { id urls { small regular full } alt_description links { html } user { name } }
+                            total_pages
+                        }
+                    }`;
+                const res = await fetch(GRAPHQL_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query }),
+                });
+                const { data, errors } = await res.json();
+                if (errors) {
+                    console.error('searchImages errors:', JSON.stringify(errors, null, 2));
+                    throw new Error(errors[0].message);
+                }
+                results = data.searchImages.results;
+                total_pages = data.searchImages.total_pages;
             }
-            const { results, total_pages } = data.searchImages;
 
             if (page === 1) searchResults.innerHTML = '';
             if (results.length === 0) {
@@ -280,8 +237,8 @@ if (urlToken) {
                 const imageWrapper = document.createElement('div');
                 imageWrapper.classList.add('search-result');
                 const image = document.createElement('img');
-                image.src = result.urls.small;
-                image.alt = result.alt_description;
+                image.src = searchSourceEl.value === 'pinterest' ? result.src : result.urls.small;
+                image.alt = searchSourceEl.value === 'pinterest' ? result.alt || 'Pinterest image' : result.alt_description;
                 image.loading = 'lazy';
                 image.addEventListener('click', () => {
                     console.log('Image clicked:', result.id);
@@ -290,8 +247,8 @@ if (urlToken) {
                     modal.innerHTML = `
                         <div class="modal-content">
                             <span class="close">×</span>
-                            <img src="${result.urls.regular}" alt="${result.alt_description}">
-                            <p>By: ${result.user.name}</p>
+                            <img src="${searchSourceEl.value === 'pinterest' ? result.src : result.urls.regular}" alt="${image.alt}">
+                            <p>By: ${searchSourceEl.value === 'pinterest' ? 'Pinterest' : result.user.name}</p>
                         </div>`;
                     document.body.appendChild(modal);
                     modal.querySelector('.close').addEventListener('click', () => modal.remove());
@@ -300,27 +257,19 @@ if (urlToken) {
                     });
                 });
                 const imageLink = document.createElement('a');
-                imageLink.href = result.links.html;
+                imageLink.href = searchSourceEl.value === 'pinterest' ? result.src : result.links.html;
                 imageLink.target = '_blank';
-                imageLink.textContent = result.alt_description || 'View on Unsplash';
+                imageLink.textContent = searchSourceEl.value === 'pinterest' ? 'View on Pinterest' : result.alt_description || 'View on Unsplash';
                 const downloadBtn = document.createElement('button');
                 downloadBtn.textContent = 'Download';
-                // downloadBtn.disabled = !token;
-                console.log('searchImages: Creating downloadBtn, disabled:', downloadBtn.disabled, 'token:', token);
-
-               
                 downloadBtn.addEventListener('click', async (e) => {
-                    e.stopPropagation(); // Prevent click from bubbling to parent elements
-                    e.preventDefault(); // Prevent any default behavior
+                    e.stopPropagation();
+                    e.preventDefault();
                     console.log('Download button clicked, token:', token, 'result:', result.id);
-
                     if (!token) {
-
                         showNotification('Please register and log in to download images.', true, 'info');
                         return;
                     }
-
-                    // Validate token before proceeding
                     try {
                         const payload = JSON.parse(atob(token.split('.')[1]));
                         if (payload.exp * 1000 < Date.now()) {
@@ -328,7 +277,6 @@ if (urlToken) {
                             localStorage.removeItem('token');
                             token = null;
                             showNotification('Session expired. Please log in again.', true, 'error');
-                            downloadBtn.disabled = true;
                             return;
                         }
                     } catch (error) {
@@ -336,128 +284,109 @@ if (urlToken) {
                         localStorage.removeItem('token');
                         token = null;
                         showNotification('Invalid session. Please log in again.', true, 'error');
-                        downloadBtn.disabled = true;
                         return;
                     }
-
                     showNotification('Download started...', false, 'ongoing');
                     try {
-                        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
                         let downloadUrl;
-                    
-                        if (isMobile) {
-                            // Call backend to get base64-encoded image
-                            const downloadResponse = await fetch(GRAPHQL_URL, {
+                        if (searchSourceEl.value === 'pinterest') {
+                            const response = await fetch(result.src);
+                            if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`);
+                            const blob = await response.blob();
+                            downloadUrl = window.URL.createObjectURL(blob);
+                        } else {
+                            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                            if (isMobile) {
+                                const downloadResponse = await fetch(GRAPHQL_URL, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        Authorization: `Bearer ${token}`,
+                                    },
+                                    body: JSON.stringify({
+                                        query: `query { downloadImage(url: "${result.urls.full}") }`,
+                                    }),
+                                });
+                                const { data, errors } = await downloadResponse.json();
+                                if (errors) throw new Error(errors[0].message);
+                                downloadUrl = data.downloadImage;
+                            } else {
+                                const response = await fetch(result.urls.full);
+                                if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`);
+                                const blob = await response.blob();
+                                downloadUrl = window.URL.createObjectURL(blob);
+                            }
+                        }
+                        const a = document.createElement('a');
+                        a.href = downloadUrl;
+                        a.download = `${result.id || 'image'}.jpg`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        if (searchSourceEl.value !== 'pinterest') {
+                            const mutation = `
+                                mutation { 
+                                    trackDownload(
+                                        imageId: "${result.id}", 
+                                        url: "${result.urls.full}", 
+                                        alt_description: "${result.alt_description || ''}"
+                                    ) { 
+                                        id url alt_description timestamp 
+                                    } 
+                                }`;
+                            const trackResponse = await fetch(GRAPHQL_URL, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
                                     Authorization: `Bearer ${token}`,
                                 },
-                                body: JSON.stringify({
-                                    query: `
-                                        query {
-                                            downloadImage(url: "${result.urls.full}")
-                                        }
-                                    `,
-                                }),
+                                body: JSON.stringify({ query: mutation }),
                             });
-                        
-                            const { data, errors } = await downloadResponse.json();
-                            if (errors) {
-                                throw new Error(errors[0].message);
-                            }
-                        
-                            downloadUrl = data.downloadImage;
-                        
-                       
-                        }else {
-                            // Use fetch to download the image
-                            const response = await fetch(result.urls.full, {
-                                method: 'GET',
-                                headers: {
-                                    // Add any necessary headers for Unsplash API if required
-                                },
-                            });
-                            if (!response.ok) {
-                                throw new Error(`Failed to fetch image: ${response.statusText}`);
-                            }
-                            const blob = await response.blob();
-                            downloadurl = window.URL.createObjectURL(blob);
-
+                            const { data, errors } = await trackResponse.json();
+                            if (errors) throw new Error(errors[0].message);
                         }
-                        
-                            const a = document.createElement('a');
-                            a.href = downloadUrl;
-                            a.download = `${result.id || 'image'}.jpg`;
-                            document.body.appendChild(a);
-                            a.click();
-                            if (isMobile) {
-                            window.URL.revokeObjectURL(downloadUrl);
-                            }
-                            document.body.removeChild(a);
-                   
-                       
-                        // Track the download via GraphQL mutation
-                        const mutation = `
-                            mutation { 
-                                trackDownload(
-                                    imageId: "${result.id}", 
-                                    url: "${result.urls.full}", 
-                                    alt_description: "${result.alt_description || ''}"
-                                ) { 
-                                    id 
-                                    url 
-                                    alt_description 
-                                    timestamp 
-                                } 
-                            }`;
-                        const trackResponse = await fetch(GRAPHQL_URL, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                Authorization: `Bearer ${token}`,
-                            },
-                            body: JSON.stringify({ query: mutation }),
-                        });
-                        const { data, errors } = await trackResponse.json();
-                        if (errors) {
-                            console.error('trackDownload errors:', JSON.stringify(errors, null, 2));
-                            throw new Error(errors[0].message);
-                        }
-
                         showNotification('Image downloaded successfully!', false, 'success');
-                        displayDownloadHistory(); // Refresh download history
+                        if (searchSourceEl.value !== 'pinterest') displayDownloadHistory();
                     } catch (error) {
                         console.error('Download error:', error.message);
                         showNotification(`Failed to download image: ${error.message}`, false, 'error');
                     }
                 });
-
                 const favoriteBtn = document.createElement('button');
                 favoriteBtn.textContent = 'Favorite';
-                // favoriteBtn.disabled = !token;
-                console.log('searchImages: Creating favoriteBtn, disabled:', favoriteBtn.disabled, 'token:', token);
                 favoriteBtn.addEventListener('click', async (e) => {
                     e.stopPropagation();
                     console.log('Favorite button clicked, token:', token, 'result:', result.id);
                     if (!token) {
-                        
                         showNotification('Please register and log in to add favorites.', true, 'info');
                         return;
                     }
                     showNotification('Adding to favorites...', false, 'ongoing');
-                    const mutation = `
-                        mutation {
-                            addFavorite(image: {
-                                id: "${result.id}"
-                                urls: { small: "${result.urls.small}", regular: "${result.urls.regular}", full: "${result.urls.full}" }
-                                alt_description: "${result.alt_description || ''}"
-                                links: { html: "${result.links.html}" }
-                                user: { name: "${result.user.name}" }
-                            }) {
-                                favorites { id }
-                            }
-                        }`;
+                    const mutation = searchSourceEl.value === 'pinterest'
+                        ? `
+                            mutation {
+                                addFavorite(image: {
+                                    id: "${result.id}"
+                                    urls: { small: "${result.src}", regular: "${result.src}", full: "${result.src}" }
+                                    alt_description: "${result.alt || ''}"
+                                    links: { html: "${result.src}" }
+                                    user: { name: "Pinterest" }
+                                }) {
+                                    favorites { id }
+                                }
+                            }`
+                        : `
+                            mutation {
+                                addFavorite(image: {
+                                    id: "${result.id}"
+                                    urls: { small: "${result.urls.small}", regular: "${result.urls.regular}", full: "${result.urls.full}" }
+                                    alt_description: "${result.alt_description || ''}"
+                                    links: { html: "${result.links.html}" }
+                                    user: { name: "${result.user.name}" }
+                                }) {
+                                    favorites { id }
+                                }
+                            }`;
                     try {
                         const res = await fetch(GRAPHQL_URL, {
                             method: 'POST',
@@ -479,7 +408,6 @@ if (urlToken) {
                         showNotification('Failed to add favorite: ' + error.message, false, 'error');
                     }
                 });
-
                 imageWrapper.appendChild(image);
                 imageWrapper.appendChild(imageLink);
                 imageWrapper.appendChild(downloadBtn);
@@ -494,7 +422,6 @@ if (urlToken) {
             updateShareableLink();
 
             console.log('searchImages: Total buttons rendered:', document.querySelectorAll('.search-result button').length);
-            // Debug button existence
             setTimeout(() => {
                 console.log('Buttons after 1s:', document.querySelectorAll('.search-result button').length);
                 console.log('Download buttons:', document.querySelectorAll('.search-result button:first-of-type').length);
@@ -510,19 +437,19 @@ if (urlToken) {
     function updatePagination() {
         console.log('updatePagination called:', { page, totalPages });
         showMore.innerHTML = '';
-        if (page > 1) {
+        if (page > 1 && searchSourceEl.value !== 'pinterest') {
             const prevBtn = document.createElement('button');
             prevBtn.textContent = 'Previous';
             prevBtn.addEventListener('click', () => searchImages(page - 1));
             showMore.appendChild(prevBtn);
         }
-        if (page < totalPages) {
+        if (page < totalPages && searchSourceEl.value !== 'pinterest') {
             const nextBtn = document.createElement('button');
             nextBtn.textContent = 'Next';
             nextBtn.addEventListener('click', () => searchImages(page + 1));
             showMore.appendChild(nextBtn);
         }
-        showMore.style.display = totalPages > 1 ? 'block' : 'none';
+        showMore.style.display = totalPages > 1 && searchSourceEl.value !== 'pinterest' ? 'block' : 'none';
     }
 
     async function displayFavorites(userFavorites = null) {
@@ -562,7 +489,7 @@ if (urlToken) {
                 wrapper.className = 'search-result';
                 wrapper.innerHTML = `
                     <img src="${f.urls.small}" alt="${f.alt_description}" loading="lazy">
-                    <a href="${f.links.html}" target="_blank">${f.alt_description || 'View on Unsplash'}</a>
+                    <a href="${f.links.html}" target="_blank">${f.alt_description || 'View on Source'}</a>
                     <button class="remove-favorite-btn">Remove</button>`;
                 wrapper.querySelector('.remove-favorite-btn').addEventListener('click', async () => {
                     showNotification('Removing from favorites...', false, 'ongoing');
@@ -624,16 +551,12 @@ if (urlToken) {
                 console.error('displayDownloadHistory errors:', JSON.stringify(errors, null, 2));
                 throw new Error(errors[0].message);
             }
-
-
             const history = data.getDownloadHistory;
-           
             downloadHistorySection.innerHTML = '<h3>Download History</h3>';
             if (!history || history.length === 0) {
                 downloadHistorySection.innerHTML += '<p>No downloads yet.</p>';
                 return;
             }
-            
             history.forEach(item => {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'search-result';
@@ -666,19 +589,16 @@ if (urlToken) {
                         throw new Error(errors[0].message);
                     }
                     if (data.clearDownloadHistory) {
-                        alert('Download history cleared.');
-                        displayDownloadHistory([]); 
-                
-                        
+                        showNotification('Download history cleared.', false, 'success');
+                        displayDownloadHistory([]);
                     } else {
-                        alert('Sever did not confirm deletion.');
+                        showNotification('Server did not confirm deletion.', false, 'error');
                     }
-                } catch (err) {
-                    console.error('Error clearing history:', err.message);
-                    alert('Failed to clear download history: ' + err.message);
+                } catch (error) {
+                    console.error('Error clearing history:', error.message);
+                    showNotification('Failed to clear download history: ' + error.message, false, 'error');
                 }
             });
-
             downloadHistorySection.appendChild(clearBtn);
         } catch (error) {
             console.error('Error fetching download history:', error.message);
@@ -709,6 +629,7 @@ if (urlToken) {
             inputEl.value = '';
             filters = { orientation: '', color: '', size: '' };
             filterEls.forEach(el => (el.value = ''));
+            searchSourceEl.value = 'unsplash';
             searchResults.innerHTML = '';
             showMore.style.display = 'none';
             history.pushState({}, '', window.location.pathname);
@@ -716,7 +637,7 @@ if (urlToken) {
     }
 
     function updateShareableLink() {
-        const params = new URLSearchParams({ query: inputData, ...filters });
+        const params = new URLSearchParams({ query: inputData, source: searchSourceEl.value, ...filters });
         history.pushState({}, '', `?${params.toString()}`);
     }
 
@@ -730,6 +651,7 @@ if (urlToken) {
     const query = urlParams.get('query');
     if (query) {
         inputEl.value = query;
+        searchSourceEl.value = urlParams.get('source') || 'unsplash';
         filters.orientation = urlParams.get('orientation') || '';
         filters.color = urlParams.get('color') || '';
         filters.size = urlParams.get('size') || '';
@@ -739,8 +661,6 @@ if (urlToken) {
         searchImages();
     }
 }
-
-
 
 const logoutLink = document.getElementById('logout-link');
 if (logoutLink) {
