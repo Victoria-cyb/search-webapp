@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const formEl = document.querySelector('form');
 const inputEl = document.getElementById('search-input');
-const searchSourceEl = document.getElementById('search-source');
+const searchSourceEl = document.getElementById('search-source'); // New
 const searchResults = document.querySelector('.search-results');
 const showMore = document.getElementById('show-more-button');
 const favoritesSection = document.querySelector('.favorites');
@@ -49,19 +49,8 @@ if (formEl && inputEl && searchResults && showMore) {
     let inputData = '';
     let page = 1;
     let totalPages = 1;
-
-    // Initialize token and handle URL token first
     let token = localStorage.getItem('token') || null;
-    const urlParamsForToken = new URLSearchParams(window.location.search);
-    const urlToken = urlParamsForToken.get('token');
-    if (urlToken) {
-        console.log('script.js: Found URL token:', urlToken);
-        localStorage.setItem('token', urlToken);
-        token = urlToken; // Update global token
-        window.history.replaceState({}, document.title, window.location.pathname);
-    }
 
-    // Validate token
     console.log('script.js: Initial token check:', token);
     if (token) {
         try {
@@ -98,6 +87,13 @@ if (formEl && inputEl && searchResults && showMore) {
     } else {
         console.log('script.js: No user logged in, hiding filters');
         filtersSection?.classList.remove('active');
+    }
+
+    const urlParamsForToken = new URLSearchParams(window.location.search);
+    const urlToken = urlParamsForToken.get('token');
+    if (urlToken) {
+        localStorage.setItem('token', urlToken);
+        window.history.replaceState({}, document.title, window.location.pathname);
     }
 
     window.showNotification = function(message, showRegister = true, type = 'info') {
@@ -154,7 +150,7 @@ if (formEl && inputEl && searchResults && showMore) {
     };
 
     async function searchImages(newPage = page) {
-        console.log('searchImages called:', { inputData, page: newPage, filters, source: searchSourceEl.value, token });
+        console.log('searchImages called:', { inputData, page: newPage, filters, source: searchSourceEl.value });
         try {
             page = newPage;
             inputData = inputEl.value.trim();
@@ -164,35 +160,13 @@ if (formEl && inputEl && searchResults && showMore) {
                 return;
             }
 
-            // Re-validate token before search
-            token = localStorage.getItem('token') || null;
-            if (token) {
-                try {
-                    const payload = JSON.parse(atob(token.split('.')[1]));
-                    if (payload.exp * 1000 < Date.now()) {
-                        console.log('script.js: Token expired before search, clearing');
-                        localStorage.removeItem('token');
-                        token = null;
-                        showNotification('Session expired. Please log in again.', true, 'error');
-                        filtersSection?.classList.remove('active');
-                        return;
-                    }
-                } catch (error) {
-                    console.log('script.js: Invalid token before search, clearing', error.message);
-                    localStorage.removeItem('token');
-                    token = null;
-                    showNotification('Invalid session. Please log in again.', true, 'error');
-                    filtersSection?.classList.remove('active');
-                    return;
-                }
-            }
-
             searchResults.innerHTML = '<div class="loading">Loading...</div>';
             let query;
             let results = [];
             let total_pages = 1;
 
             if (searchSourceEl.value === 'pinterest') {
+                // Restrict Pinterest search to logged-in users (optional)
                 if (!token) {
                     showNotification('Please log in to search Pinterest images.', true, 'info');
                     searchResults.innerHTML = '';
@@ -226,7 +200,7 @@ if (formEl && inputEl && searchResults && showMore) {
                     throw new Error(errors[0].message);
                 }
                 results = data.scrapePinterestImages.images;
-                total_pages = 1;
+                total_pages = 1; // Pinterest results are limited to 30, no pagination
             } else {
                 query = `
                     query {
@@ -239,7 +213,6 @@ if (formEl && inputEl && searchResults && showMore) {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        ...(token && { Authorization: `Bearer ${token}` }), // Allow token for authenticated Unsplash searches
                     },
                     body: JSON.stringify({ query }),
                 });
@@ -294,7 +267,7 @@ if (formEl && inputEl && searchResults && showMore) {
                     e.preventDefault();
                     console.log('Download button clicked, token:', token, 'result:', result.id);
                     if (!token) {
-                        showNotification('Please log in to download images.', true, 'info');
+                        showNotification('Please register and log in to download images.', true, 'info');
                         return;
                     }
                     try {
@@ -385,7 +358,7 @@ if (formEl && inputEl && searchResults && showMore) {
                     e.stopPropagation();
                     console.log('Favorite button clicked, token:', token, 'result:', result.id);
                     if (!token) {
-                        showNotification('Please log in to add favorites.', true, 'info');
+                        showNotification('Please register and log in to add favorites.', true, 'info');
                         return;
                     }
                     showNotification('Adding to favorites...', false, 'ongoing');
@@ -699,5 +672,5 @@ if (logoutLink) {
         window.location.href = 'landing.html';
     });
 } else {
-    console.warn('script.js: logout-link not found on', document.location.href);
+    console.warn('script.js: logout-link not found on', window.location.pathname);
 }
